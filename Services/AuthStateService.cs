@@ -11,13 +11,23 @@ namespace EduConnect.Services
 
         public bool Login(string email, string password)
         {
-            // Will be implemented in Phase 3
-            return false;
+            // Find user in seed data
+            var user = SeedData.Users.Find(u => 
+                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase) &&
+                u.PasswordHash == password); // In real app, compare hashed passwords
+            
+            if (user == null)
+                return false;
+
+            State.CurrentUser = user;
+            OnAuthChanged?.Invoke();
+            return true;
         }
 
         public void Logout()
         {
-            // Will be implemented in Phase 3
+            State.CurrentUser = null;
+            OnAuthChanged?.Invoke();
         }
     }
 }
