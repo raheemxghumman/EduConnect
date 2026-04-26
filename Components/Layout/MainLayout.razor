@@ -1,20 +1,28 @@
 ﻿@inherits LayoutComponentBase
+@using EduConnect.Services
+@inject AuthStateService AuthState
 
-<div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+<CascadingValue Value="AuthState.State" Name="AuthState">
+    <div class="layout-container">
+        <AppNavBar />
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
-        </div>
-
-        <article class="content px-4">
+        <main class="main-content container-fluid py-4">
             @Body
-        </article>
-    </main>
-</div>
+        </main>
+
+        <footer class="footer mt-auto py-3 bg-light border-top">
+            <div class="container-fluid text-center text-muted">
+                <small>
+                    <i class="bi bi-mortarboard-fill me-1"></i> EduConnect Academic Portal &copy; @DateTime.Now.Year
+                    <span class="mx-2">•</span>
+                    <a href="#" class="text-decoration-none">Privacy Policy</a>
+                    <span class="mx-2">•</span>
+                    <a href="#" class="text-decoration-none">Terms of Service</a>
+                </small>
+            </div>
+        </footer>
+    </div>
+</CascadingValue>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

@@ -26,6 +26,26 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHAucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/AppNavBar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BcHBOYXZCYXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/AuthGuard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9BdXRoR3VhcmQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/CourseCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Db3Vyc2VDYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/GradeInput.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9HcmFkZUlucHV0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/NotificationBell.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Ob3RpZmljYXRpb25CZWxsLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/Pages/Error.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9FcnJvci5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -38,8 +58,28 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdlcy9Ob3RGb3VuZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/Pagination.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9QYWdpbmF0aW9uLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/RoleLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Sb2xlTGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/Routes.razor]
 build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9Sb3V0ZXMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/SearchBar.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TZWFyY2hCYXIucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/StatusBadge.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdGF0dXNCYWRnZS5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/StudentCard.razor]
+build_metadata.AdditionalFiles.TargetPath = Q29tcG9uZW50cy9TdHVkZW50Q2FyZC5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/Components/_Imports.razor]

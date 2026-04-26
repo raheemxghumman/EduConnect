@@ -73,8 +73,6 @@
 /Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/compressed/ycidns081u-{0}-cyz5k529gx-cyz5k529gx.gz
 /Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/compressed/djputxgd7l-{0}-ax6tuj8tun-ax6tuj8tun.gz
 /Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/compressed/l3xojnsgtd-{0}-zr4b1gdhaw-zr4b1gdhaw.gz
-/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/compressed/pw1vajgwzw-{0}-zorsy6j8gk-zorsy6j8gk.gz
-/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/compressed/2lipjr99lr-{0}-zorsy6j8gk-zorsy6j8gk.gz
 /Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/staticwebassets.build.json
 /Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/staticwebassets.build.json.cache
 /Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/staticwebassets.development.json
@@ -85,3 +83,5 @@
 /Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/EduConnect.pdb
 /Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/EduConnect.genruntimeconfig.cache
 /Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/ref/EduConnect.dll
+/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/compressed/pw1vajgwzw-{0}-skq9fv5ddt-skq9fv5ddt.gz
+/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/Debug/net10.0/compressed/2lipjr99lr-{0}-skq9fv5ddt-skq9fv5ddt.gz
