@@ -18,6 +18,16 @@
             <ul class="navbar-nav me-auto">
                 @if (AuthState.State.IsAuthenticated)
                 {
+                    <li class="nav-item">
+                        <a class="nav-link @GetActiveClass(GetDashboardLink())" href="@GetDashboardLink()">
+                            <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @GetActiveClass("/courses")" href="/courses">
+                            <i class="bi bi-search me-1"></i> Course Catalog
+                        </a>
+                    </li>
                     @if (AuthState.State.IsAdmin)
                     {
                         <li class="nav-item">
@@ -56,11 +66,6 @@
                     }
                     else if (AuthState.State.IsStudent)
                     {
-                        <li class="nav-item">
-                            <a class="nav-link @GetActiveClass("/courses")" href="/courses">
-                                <i class="bi bi-search me-1"></i> Course Catalog
-                            </a>
-                        </li>
                         <li class="nav-item">
                             <a class="nav-link @GetActiveClass("/student/enroll")" href="/student/enroll">
                                 <i class="bi bi-plus-circle me-1"></i> Enroll
@@ -105,15 +110,20 @@
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
                             <li>
-                                <a class="dropdown-item" href="/dashboard">
+                                <a class="dropdown-item" href="@GetDashboardLink()">
                                     <i class="bi bi-speedometer2 me-2"></i> Dashboard
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="/profile">
+                                    <i class="bi bi-person me-2"></i> My Profile
                                 </a>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             <li>
-                                <button class="dropdown-item text-danger" @onclick="Logout">
+                                <a class="dropdown-item text-danger" href="/logout">
                                     <i class="bi bi-box-arrow-right me-2"></i> Logout
-                                </button>
+                                </a>
                             </li>
                         </ul>
                     </li>
@@ -143,9 +153,17 @@
         return currentUri.Contains(path) ? "active fw-bold" : "";
     }
 
-    private void Logout()
+    private string GetDashboardLink()
     {
-        AuthState.Logout();
-        Nav.NavigateTo("/", forceLoad: true);
+        if (!AuthState.State.IsAuthenticated)
+            return "/";
+
+        return AuthState.State.CurrentUser switch
+        {
+            Admin => "/admin/dashboard",
+            Faculty => "/faculty/dashboard",
+            Student => "/student/dashboard",
+            _ => "/"
+        };
     }
 }

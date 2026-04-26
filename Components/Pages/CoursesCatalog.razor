@@ -1,0 +1,367 @@
+@page "/courses"
+@using EduConnect.Services
+@using EduConnect.Models
+@inject AuthStateService AuthState
+@inject ICourseService CourseService
+@inject IStudentService StudentService
+@inject NavigationManager Nav
+
+<AuthGuard>
+    <RoleLayout>
+        <div class="container-fluid py-4">
+            <div class="row mb-4">
+                <div class="col">
+                    <h2 class="fw-bold">
+                        <i class="bi bi-journal-text me-2"></i>
+                        Course Catalog
+                    </h2>
+                    <p class="text-muted mb-0">
+                        Browse available courses, filter by your interests, and enroll with one click.
+                    </p>
+                </div>
+                <div class="col-auto">
+                    @if (userRole == "Student")
+                    {
+                        <a href="/student/dashboard" class="btn btn-outline-primary">
+                            <i class="bi bi-speedometer2 me-1"></i> Back to Dashboard
+                        </a>
+                    }
+                    else if (userRole == "Faculty")
+                    {
+                        <a href="/faculty/dashboard" class="btn btn-outline-primary">
+                            <i class="bi bi-person-badge me-1"></i> Faculty Dashboard
+                        </a>
+                    }
+                </div>
+            </div>
+
+            <!-- Search & Filters -->
+            <div class="card shadow border-0 mb-4">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-md-8">
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <i class="bi bi-search"></i>
+                                </span>
+                                <input type="text" class="form-control" placeholder="Search by course code or title..."
+                                       @bind="searchText" @bind:event="oninput" />
+                                <button class="btn btn-outline-secondary" type="button" @onclick="ClearSearch">
+                                    Clear
+                                </button>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" @bind="selectedStatus">
+                                <option value="">All Statuses</option>
+                                <option value="Open">Open</option>
+                                <option value="AlmostFull">Almost Full</option>
+                                <option value="Full">Full</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col">
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="hideFull" @bind="hideFullCourses" />
+                                <label class="form-check-label" for="hideFull">Hide full courses</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="checkbox" id="onlyActive" @bind="onlyActiveCourses" />
+                                <label class="form-check-label" for="onlyActive">Show only active courses</label>
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <span class="text-muted small">
+                                Showing @filteredCourses.Count out of @allCourses.Count courses
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Course Grid -->
+            @if (filteredCourses.Any())
+            {
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    @foreach (var course in filteredCourses)
+                    {
+                        <div class="col">
+                            <div class="card shadow border-0 h-100">
+                                <div class="card-header @GetCardHeaderClass(course.EnrollmentStatus) text-white py-3">
+                                    <div class="d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">@course.Code</h5>
+                                        <StatusBadge Status="@course.EnrollmentStatus.ToString()" />
+                                    </div>
+                                    <h6 class="mb-0 mt-2">@course.Title</h6>
+                                </div>
+                                <div class="card-body">
+                                    <p class="card-text text-muted">@course.CreditHours credit hours • Max capacity: @course.MaxCapacity</p>
+                                    <div class="mb-3">
+                                        <h6 class="small text-uppercase text-muted mb-2">Course Details</h6>
+                                        <ul class="list-unstyled small mb-0">
+                                            <li class="mb-1">
+                                                <i class="bi bi-person-video2 me-2"></i>
+                                                <strong>Faculty:</strong> @(GetFacultyName(course.AssignedFacultyId) ?? "Not assigned")
+                                            </li>
+                                            <li class="mb-1">
+                                                <i class="bi bi-people me-2"></i>
+                                                <strong>Enrolled:</strong> @course.Enrolled.Count students
+                                            </li>
+                                            <li class="mb-1">
+                                                <i class="bi bi-clock me-2"></i>
+                                                <strong>Credit Hours:</strong> @course.CreditHours
+                                            </li>
+                                            <li>
+                                                <i class="bi bi-toggle-on me-2"></i>
+                                                <strong>Status:</strong> @(course.IsActive ? "Active" : "Inactive")
+                                            </li>
+                                        </ul>
+                                    </div>
+                                    <div class="progress mb-3" style="height: 8px;">
+                                        @{
+                                            var percent = course.MaxCapacity > 0 ? (course.Enrolled.Count * 100 / course.MaxCapacity) : 0;
+                                            var progressClass = percent < 70 ? "bg-success" : percent < 100 ? "bg-warning" : "bg-danger";
+                                        }
+                                        <div class="progress-bar @progressClass" role="progressbar" style="width: @percent%;" 
+                                             aria-valuenow="@percent" aria-valuemin="0" aria-valuemax="100"></div>
+                                    </div>
+                                    <p class="small text-muted mb-0">
+                                        @percent% full • @(course.MaxCapacity - course.Enrolled.Count) seats remaining
+                                    </p>
+                                </div>
+                                <div class="card-footer bg-light py-3">
+                                    <div class="d-flex justify-content-between">
+                                        <a href="/courses/@course.Id" class="btn btn-outline-primary btn-sm">
+                                            <i class="bi bi-info-circle me-1"></i> Details
+                                        </a>
+                                        @if (userRole == "Student")
+                                        {
+                                            var isEnrolled = currentStudent?.Enrollments.Any(c => c.Id == course.Id) ?? false;
+                                            if (isEnrolled)
+                                            {
+                                                <button class="btn btn-success btn-sm" disabled>
+                                                    <i class="bi bi-check-circle me-1"></i> Enrolled
+                                                </button>
+                                            }
+                                            else if (course.EnrollmentStatus == EnrollmentStatus.Full)
+                                            {
+                                                <button class="btn btn-secondary btn-sm" disabled>
+                                                    <i class="bi bi-x-circle me-1"></i> Full
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-primary btn-sm" @onclick="@(() => EnrollInCourse(course))">
+                                                    <i class="bi bi-plus-circle me-1"></i> Enroll
+                                                </button>
+                                            }
+                                        }
+                                        else if (userRole == "Faculty" || userRole == "Admin")
+                                        {
+                                            <a href="/courses/@course.Id/edit" class="btn btn-outline-secondary btn-sm">
+                                                <i class="bi bi-pencil-square me-1"></i> Manage
+                                            </a>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <i class="bi bi-journal-x display-1 text-muted mb-3"></i>
+                    <h4>No courses match your filters</h4>
+                    <p class="text-muted">Try adjusting your search or filters to see more results.</p>
+                    <button class="btn btn-outline-primary" @onclick="ResetFilters">
+                        <i class="bi bi-arrow-clockwise me-1"></i> Reset Filters
+                    </button>
+                </div>
+            }
+
+            <!-- Enrollment Modal -->
+            @if (showEnrollmentModal)
+            {
+                <div class="modal show d-block" tabindex="-1" role="dialog" style="background-color: rgba(0,0,0,0.5);">
+                    <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header bg-primary text-white">
+                                <h5 class="modal-title">
+                                    <i class="bi bi-journal-plus me-2"></i>
+                                    Enroll in @selectedCourse?.Code
+                                </h5>
+                                <button type="button" class="btn-close btn-close-white" @onclick="CloseModal"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p>You are about to enroll in <strong>@selectedCourse?.Title</strong>.</p>
+                                <ul class="small text-muted">
+                                    <li>Credit Hours: @selectedCourse?.CreditHours</li>
+                                    <li>Faculty: @GetFacultyName(selectedCourse?.AssignedFacultyId)</li>
+                                    <li>Seats remaining: @(selectedCourse?.MaxCapacity - selectedCourse?.Enrolled.Count)</li>
+                                </ul>
+                                <div class="alert alert-warning small">
+                                    <i class="bi bi-exclamation-triangle me-2"></i>
+                                    Once enrolled, you cannot drop the course after the add/drop period ends.
+                                </div>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-outline-secondary" @onclick="CloseModal">Cancel</button>
+                                <button type="button" class="btn btn-primary" @onclick="ConfirmEnrollment" disabled="@isEnrolling">
+                                    @if (isEnrolling)
+                                    {
+                                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                        <span>Enrolling...</span>
+                                    }
+                                    else
+                                    {
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        <span>Confirm Enrollment</span>
+                                    }
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </RoleLayout>
+</AuthGuard>
+
+@code {
+    private List<Course> allCourses = new();
+    private List<Course> filteredCourses = new();
+    private Student? currentStudent;
+    private string userRole = "";
+    private string searchText = "";
+    private string selectedStatus = "";
+    private bool hideFullCourses = false;
+    private bool onlyActiveCourses = true;
+
+    // Enrollment modal state
+    private bool showEnrollmentModal = false;
+    private Course? selectedCourse = null;
+    private bool isEnrolling = false;
+
+    protected override void OnInitialized()
+    {
+        var currentUser = AuthState.State.CurrentUser;
+        userRole = AuthState.State.Role;
+        if (currentUser is Student student)
+        {
+            currentStudent = student;
+        }
+
+        LoadCourses();
+    }
+
+    private void LoadCourses()
+    {
+        allCourses = CourseService.GetAll();
+        ApplyFilters();
+    }
+
+    private void ApplyFilters()
+    {
+        var query = allCourses.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(searchText))
+        {
+            var lower = searchText.ToLower();
+            query = query.Where(c =>
+                c.Code.ToLower().Contains(lower) ||
+                c.Title.ToLower().Contains(lower));
+        }
+
+        if (!string.IsNullOrEmpty(selectedStatus))
+        {
+            var status = Enum.Parse<EnrollmentStatus>(selectedStatus);
+            query = query.Where(c => c.EnrollmentStatus == status);
+        }
+
+        if (hideFullCourses)
+        {
+            query = query.Where(c => c.EnrollmentStatus != EnrollmentStatus.Full);
+        }
+
+        if (onlyActiveCourses)
+        {
+            query = query.Where(c => c.IsActive);
+        }
+
+        filteredCourses = query.ToList();
+    }
+
+    private void ClearSearch()
+    {
+        searchText = "";
+        ApplyFilters();
+    }
+
+    private void ResetFilters()
+    {
+        searchText = "";
+        selectedStatus = "";
+        hideFullCourses = false;
+        onlyActiveCourses = true;
+        ApplyFilters();
+    }
+
+    private string GetCardHeaderClass(EnrollmentStatus status)
+    {
+        return status switch
+        {
+            EnrollmentStatus.Open => "bg-success",
+            EnrollmentStatus.AlmostFull => "bg-warning",
+            EnrollmentStatus.Full => "bg-secondary",
+            _ => "bg-primary"
+        };
+    }
+
+    private string? GetFacultyName(Guid? facultyId)
+    {
+        if (!facultyId.HasValue) return null;
+        var faculty = SeedData.Faculty.FirstOrDefault(f => f.Id == facultyId);
+        return faculty?.FullName;
+    }
+
+    private void EnrollInCourse(Course course)
+    {
+        if (currentStudent == null) return;
+        selectedCourse = course;
+        showEnrollmentModal = true;
+    }
+
+    private void CloseModal()
+    {
+        showEnrollmentModal = false;
+        selectedCourse = null;
+        isEnrolling = false;
+    }
+
+    private async Task ConfirmEnrollment()
+    {
+        if (selectedCourse == null || currentStudent == null) return;
+
+        isEnrolling = true;
+        StateHasChanged();
+
+        // Simulate API call
+        await Task.Delay(800);
+
+        // Add student to course enrollment
+        if (!selectedCourse.Enrolled.Any(s => s.Id == currentStudent.Id))
+        {
+            selectedCourse.Enrolled.Add(currentStudent);
+            currentStudent.Enrollments.Add(selectedCourse);
+            // In a real app, call CourseService.Update(selectedCourse) and StudentService.Update(currentStudent)
+        }
+
+        isEnrolling = false;
+        showEnrollmentModal = false;
+        ApplyFilters(); // Refresh list to update status
+        StateHasChanged();
+    }
+}

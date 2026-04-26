@@ -3,7 +3,11 @@
 @inject AuthStateService AuthState
 @inject NavigationManager Nav
 
-@if (AuthState.State.IsAuthenticated)
+@if (!RequireAuth)
+{
+    @ChildContent
+}
+else if (AuthState.State.IsAuthenticated)
 {
     @if (string.IsNullOrEmpty(RequiredRole) || AuthState.State.Role == RequiredRole)
     {
@@ -56,9 +60,9 @@ else
                         <p class="text-muted">
                             You need to be logged in to access this page.
                         </p>
-                        <button class="btn btn-primary" @onclick="GoToLogin">
+                        <a class="btn btn-primary" href="/login">
                             <i class="bi bi-box-arrow-in-right me-1"></i> Go to Login
-                        </button>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -73,10 +77,13 @@ else
     [Parameter]
     public string? RequiredRole { get; set; }
 
+    [Parameter]
+    public bool RequireAuth { get; set; } = true;
+
     protected override void OnInitialized()
     {
         // If not authenticated and trying to access protected page, redirect to login
-        if (!AuthState.State.IsAuthenticated)
+        if (!AuthState.State.IsAuthenticated && RequireAuth)
         {
             // We'll show the login UI instead of redirecting
         }
@@ -89,6 +96,14 @@ else
 
     private void GoToDashboard()
     {
-        Nav.NavigateTo("/dashboard");
+        var role = AuthState.State.Role;
+        var path = role switch
+        {
+            "Admin" => "/admin/dashboard",
+            "Faculty" => "/faculty/dashboard",
+            "Student" => "/student/dashboard",
+            _ => "/"
+        };
+        Nav.NavigateTo(path);
     }
 }

@@ -1,0 +1,227 @@
+@page "/register"
+@using EduConnect.Services
+@using EduConnect.Models
+@using Microsoft.AspNetCore.Components.Forms
+@inject IStudentService StudentService
+@inject AuthStateService AuthState
+@inject NavigationManager Nav
+
+<AuthGuard RequireAuth="false">
+    <RoleLayout>
+        <div class="container py-5">
+            <div class="row justify-content-center">
+                <div class="col-md-8 col-lg-6">
+                    <div class="card shadow border-0">
+                        <div class="card-header bg-success text-white text-center py-3">
+                            <h4 class="mb-0">
+                                <i class="bi bi-person-plus me-2"></i>
+                                Create Student Account
+                            </h4>
+                        </div>
+                        <div class="card-body p-4">
+                            <EditForm Model="@registerModel" OnValidSubmit="@HandleRegister" FormName="registerForm">
+                                <DataAnnotationsValidator />
+
+                                <div class="mb-3">
+                                    <label for="fullName" class="form-label">Full Name</label>
+                                    <InputText id="fullName" @bind-Value="registerModel.FullName" class="form-control" placeholder="John Doe" />
+                                    <ValidationMessage For="@(() => registerModel.FullName)" class="text-danger small" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="email" class="form-label">Email Address</label>
+                                    <InputText id="email" @bind-Value="registerModel.Email" @bind:event="oninput" class="form-control" placeholder="student@educonnect.edu" />
+                                    <ValidationMessage For="@(() => registerModel.Email)" class="text-danger small" />
+                                    <div class="form-text">Use your university email address</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="password" class="form-label">Password</label>
+                                    <InputText id="password" type="password" @bind-Value="registerModel.Password" @bind:event="oninput" class="form-control" placeholder="Create a strong password" />
+                                    <ValidationMessage For="@(() => registerModel.Password)" class="text-danger small" />
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="confirmPassword" class="form-label">Confirm Password</label>
+                                    <InputText id="confirmPassword" type="password" @bind-Value="registerModel.ConfirmPassword" @bind:event="oninput" class="form-control" placeholder="Re‑enter your password" />
+                                    <ValidationMessage For="@(() => registerModel.ConfirmPassword)" class="text-danger small" />
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-md-6 mb-3">
+                                        <label for="semester" class="form-label">Semester</label>
+                                        <InputNumber id="semester" @bind-Value="registerModel.Semester" @bind:event="oninput" class="form-control" min="1" max="8" />
+                                        <ValidationMessage For="@(() => registerModel.Semester)" class="text-danger small" />
+                                    </div>
+                                    <div class="col-md-6 mb-3">
+                                        <label for="cgpa" class="form-label">Initial CGPA</label>
+                                        <InputNumber id="cgpa" @bind-Value="registerModel.CGPA" @bind:event="oninput" class="form-control" step="0.01" min="0" max="4" />
+                                        <ValidationMessage For="@(() => registerModel.CGPA)" class="text-danger small" />
+                                    </div>
+                                </div>
+
+                                <div class="form-check mb-4">
+                                    <InputCheckbox id="terms" @bind-Value="registerModel.AcceptTerms" @bind:event="oninput" class="form-check-input" />
+                                    <label for="terms" class="form-check-label">
+                                        I agree to the <a href="#" class="text-success">Terms of Service</a> and <a href="#" class="text-success">Privacy Policy</a>
+                                    </label>
+                                    @if (!registerModel.AcceptTerms && termsTouched)
+                                    {
+                                        <div class="text-danger small">You must accept the terms</div>
+                                    }
+                                </div>
+
+                                <div class="d-grid mb-3">
+                                    <button type="submit" class="btn btn-success btn-lg" disabled="@isRegistering">
+                                        @if (isRegistering)
+                                        {
+                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                                            <span>Creating Account...</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="bi bi-person-plus me-2"></i>
+                                            <span>Create Account</span>
+                                        }
+                                    </button>
+                                </div>
+
+                                @if (!string.IsNullOrEmpty(successMessage))
+                                {
+                                    <div class="alert alert-success mb-3">
+                                        <i class="bi bi-check-circle me-2"></i>
+                                        @successMessage
+                                    </div>
+                                }
+
+                                @if (!string.IsNullOrEmpty(errorMessage))
+                                {
+                                    <div class="alert alert-danger mb-3">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        @errorMessage
+                                    </div>
+                                }
+                            </EditForm>
+
+                            <div class="text-center mt-4">
+                                <p class="text-muted">
+                                    Already have an account?
+                                    <a href="/login" class="ms-1">Sign in here</a>
+                                </p>
+                                <hr class="my-3" />
+                                <div class="alert alert-warning small">
+                                    <h6 class="alert-heading mb-2">
+                                        <i class="bi bi-info-circle me-1"></i>
+                                        Note
+                                    </h6>
+                                    <p class="mb-0">
+                                        Registration creates a <strong>Student</strong> account only. Admin and Faculty accounts are managed by the university administration.
+                                        After registration, you can log in with your credentials.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </RoleLayout>
+</AuthGuard>
+
+@code {
+    private RegisterModel registerModel = new();
+    private bool isRegistering = false;
+    private bool termsTouched = false;
+    private string? successMessage;
+    private string? errorMessage;
+
+    private class RegisterModel
+    {
+        [Required(ErrorMessage = "Full name is required")]
+        [StringLength(100, ErrorMessage = "Full name cannot exceed 100 characters")]
+        public string FullName { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Email is required")]
+        [EmailAddress(ErrorMessage = "Invalid email format")]
+        public string Email { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Password is required")]
+        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
+        public string Password { get; set; } = string.Empty;
+
+        [Required(ErrorMessage = "Please confirm your password")]
+        [Compare(nameof(Password), ErrorMessage = "Passwords do not match")]
+        public string ConfirmPassword { get; set; } = string.Empty;
+
+        [Range(1, 8, ErrorMessage = "Semester must be between 1 and 8")]
+        public int Semester { get; set; } = 1;
+
+        [Range(0.0, 4.0, ErrorMessage = "CGPA must be between 0.0 and 4.0")]
+        public decimal CGPA { get; set; } = 0.0m;
+
+        public bool AcceptTerms { get; set; }
+    }
+
+    private async Task HandleRegister()
+    {
+        termsTouched = true;
+        if (!registerModel.AcceptTerms)
+        {
+            errorMessage = "You must accept the terms and conditions.";
+            return;
+        }
+
+        isRegistering = true;
+        successMessage = null;
+        errorMessage = null;
+        StateHasChanged();
+
+        try
+        {
+            // Simulate network delay
+            await Task.Delay(500);
+
+            // Check if email already exists
+            var existing = StudentService.GetAll().FirstOrDefault(s => s.Email.Equals(registerModel.Email, StringComparison.OrdinalIgnoreCase));
+            if (existing != null)
+            {
+                errorMessage = "An account with this email already exists.";
+                return;
+            }
+
+            // Create new student
+            var newStudent = new Student
+            {
+                Id = Guid.NewGuid(),
+                FullName = registerModel.FullName,
+                Email = registerModel.Email,
+                PasswordHash = registerModel.Password, // In real app, hash the password
+                Semester = registerModel.Semester,
+                CGPA = registerModel.CGPA,
+                Enrollments = new List<Course>(),
+                Grades = new List<GradeRecord>()
+            };
+
+            // Add to service
+            StudentService.Add(newStudent);
+            // Also add to SeedData for authentication
+            SeedData.Users.Add(newStudent);
+            SeedData.Students.Add(newStudent);
+
+            successMessage = $"Account created successfully! You can now log in with {registerModel.Email}.";
+
+            // Clear form
+            registerModel = new RegisterModel();
+            termsTouched = false;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Registration failed: {ex.Message}";
+        }
+        finally
+        {
+            isRegistering = false;
+            StateHasChanged();
+        }
+    }
+}
