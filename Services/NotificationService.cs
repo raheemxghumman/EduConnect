@@ -5,58 +5,26 @@ using EduConnect.Models;
 
 namespace EduConnect.Services
 {
+    /// <summary>
+    /// SRP: Owns notification storage, read status, and notification events for reactive UI updates.
+    /// </summary>
     public class NotificationService
     {
         public event Action<Notification>? OnNewNotification;
-
-        private List<Notification> _all = new();
+        private readonly List<Notification> _all = new();
 
         public void AddNotification(Notification n)
         {
+            if (n.Id == Guid.Empty) n.Id = Guid.NewGuid();
+            if (n.Timestamp == default) n.Timestamp = DateTime.Now;
             _all.Add(n);
             OnNewNotification?.Invoke(n);
         }
 
-        public void AddNotification(string message, NotificationType type, Guid userId)
-        {
-            var notification = new Notification
-            {
-                Message = message,
-                NotificationType = type,
-                UserId = userId,
-                Timestamp = DateTime.Now
-            };
-            AddNotification(notification);
-        }
-
-        public List<Notification> GetForUser(Guid userId)
-        {
-            return _all
-                .Where(n => n.UserId == userId)
-                .OrderByDescending(n => n.Timestamp)
-                .ToList();
-        }
-
-        public int GetUnreadCount(Guid userId)
-        {
-            return _all.Count(n => n.UserId == userId && !n.IsRead);
-        }
-
-        public void MarkAsRead(Guid notificationId)
-        {
-            var notification = _all.FirstOrDefault(n => n.Id == notificationId);
-            if (notification != null)
-            {
-                notification.IsRead = true;
-            }
-        }
-
-        public void MarkAllAsRead(Guid userId)
-        {
-            foreach (var notification in _all.Where(n => n.UserId == userId && !n.IsRead))
-            {
-                notification.IsRead = true;
-            }
-        }
+        public void AddNotification(string message, NotificationType type, Guid userId) => AddNotification(new Notification { Message = message, NotificationType = type, UserId = userId, Timestamp = DateTime.Now });
+        public List<Notification> GetForUser(Guid userId) => _all.Where(n => n.UserId == userId).OrderByDescending(n => n.Timestamp).ToList();
+        public int GetUnreadCount(Guid userId) => _all.Count(n => n.UserId == userId && !n.IsRead);
+        public void MarkAsRead(Guid notificationId) { var n = _all.FirstOrDefault(x => x.Id == notificationId); if (n != null) n.IsRead = true; }
+        public void MarkAllAsRead(Guid userId) { foreach (var n in _all.Where(x => x.UserId == userId)) n.IsRead = true; }
     }
 }

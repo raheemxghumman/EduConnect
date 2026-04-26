@@ -1,339 +1,99 @@
 @page "/student/dashboard"
-@using EduConnect.Services
-@using EduConnect.Models
 @inject AuthStateService AuthState
-@inject IStudentService StudentService
-@inject ICourseService CourseService
-@inject IGradeService GradeService
 
 <AuthGuard RequiredRole="Student">
-    <RoleLayout>
-        @if (currentStudent == null)
-        {
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
+    <div class="role-header">
+        <div class="d-flex align-items-center">
+            <div class="role-icon"><i class="bi bi-mortarboard text-info"></i></div>
+            <div class="ms-3">
+                <h2 class="mb-1">Student Dashboard</h2>
+                <p class="mb-0 text-muted">
+                    Hi <strong>@Student.FullName</strong> · here's your academic snapshot
+                </p>
             </div>
-        }
-        else
-        {
-            <div class="container-fluid py-4">
-                <div class="row mb-4">
-                    <div class="col">
-                        <h2 class="fw-bold">
-                            <i class="bi bi-speedometer2 me-2"></i>
-                            Student Dashboard
-                        </h2>
-                        <p class="text-muted mb-0">
-                            Welcome back, <span class="fw-semibold">@currentStudent.FullName</span>! Here's your academic overview.
-                        </p>
-                    </div>
-                    <div class="col-auto">
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-primary fs-6 px-3 py-2">
-                                Semester @currentStudent.Semester • CGPA: @currentStudent.CGPA.ToString("F2")
-                            </span>
-                        </div>
-                    </div>
-                </div>
+        </div>
+    </div>
 
-                <!-- Quick Stats -->
-                <div class="row mb-4">
-                    <div class="col-md-3 mb-3">
-                        <div class="card border-0 shadow-sm bg-gradient-primary text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-subtitle mb-1 opacity-75">Enrolled Courses</h6>
-                                        <h3 class="card-title mb-0">@enrolledCount</h3>
-                                    </div>
-                                    <i class="bi bi-journal-text display-6 opacity-50"></i>
-                                </div>
-                                <a href="/courses" class="stretched-link text-white text-decoration-none small">
-                                    View all <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
-                            </div>
-                        </div>
+    <!-- KPI cards -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon" style="background:#dcfce7;color:var(--ec-success);">
+                        <i class="bi bi-award-fill"></i>
                     </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card border-0 shadow-sm bg-gradient-success text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-subtitle mb-1 opacity-75">Completed Credits</h6>
-                                        <h3 class="card-title mb-0">@completedCredits</h3>
-                                    </div>
-                                    <i class="bi bi-award display-6 opacity-50"></i>
-                                </div>
-                                <p class="card-text small mb-0 opacity-75">Out of 130 required</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card border-0 shadow-sm bg-gradient-warning text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-subtitle mb-1 opacity-75">Pending Assignments</h6>
-                                        <h3 class="card-title mb-0">@pendingAssignments</h3>
-                                    </div>
-                                    <i class="bi bi-clock display-6 opacity-50"></i>
-                                </div>
-                                <a href="#" class="stretched-link text-white text-decoration-none small">
-                                    Check deadlines <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card border-0 shadow-sm bg-gradient-info text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-subtitle mb-1 opacity-75">Average Grade</h6>
-                                        <h3 class="card-title mb-0">@averageGrade</h3>
-                                    </div>
-                                    <i class="bi bi-graph-up display-6 opacity-50"></i>
-                                </div>
-                                <p class="card-text small mb-0 opacity-75">Based on @gradesCount courses</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <!-- Enrolled Courses -->
-                    <div class="col-lg-8 mb-4">
-                        <div class="card shadow border-0 h-100">
-                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-journal-bookmark me-2"></i>
-                                    My Courses
-                                </h5>
-                                <a href="/courses" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-plus-circle me-1"></i> Enroll in More
-                                </a>
-                            </div>
-                            <div class="card-body p-0">
-                                @if (enrolledCourses.Any())
-                                {
-                                    <div class="list-group list-group-flush">
-                                        @foreach (var course in enrolledCourses)
-                                        {
-                                            <div class="list-group-item border-0 py-3">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <h6 class="mb-1">@course.Code: @course.Title</h6>
-                                                        <div class="d-flex align-items-center text-muted small">
-                                                            <span class="me-3">
-                                                                <i class="bi bi-person-video2 me-1"></i>
-                                                                @(course.AssignedFacultyId != Guid.Empty ? "Faculty" : "Not Assigned")
-                                                            </span>
-                                                            <span class="me-3">
-                                                                <i class="bi bi-people me-1"></i>
-                                                                @course.Enrolled.Count / @course.MaxCapacity students
-                                                            </span>
-                                                            <span class="me-3">
-                                                                <i class="bi bi-clock me-1"></i>
-                                                                @course.CreditHours credit hours
-                                                            </span>
-                                                            <StatusBadge Status="@course.EnrollmentStatus.ToString()" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-end">
-                                                        <a href="/courses/@course.Id" class="btn btn-outline-secondary btn-sm">
-                                                            <i class="bi bi-eye me-1"></i> View
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="text-center py-5">
-                                        <i class="bi bi-journal-x display-1 text-muted mb-3"></i>
-                                        <h5>No courses enrolled</h5>
-                                        <p class="text-muted">Browse the catalog and enroll in courses to get started.</p>
-                                        <a href="/courses" class="btn btn-primary">
-                                            <i class="bi bi-search me-1"></i> Browse Catalog
-                                        </a>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Grades & Activity -->
-                    <div class="col-lg-4 mb-4">
-                        <div class="card shadow border-0 h-100">
-                            <div class="card-header bg-light py-3">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-card-checklist me-2"></i>
-                                    Recent Grades
-                                </h5>
-                            </div>
-                            <div class="card-body p-0">
-                                @if (recentGrades.Any())
-                                {
-                                    <div class="list-group list-group-flush">
-                                        @foreach (var grade in recentGrades)
-                                        {
-                                            <div class="list-group-item border-0 py-3">
-                                                <div class="d-flex justify-content-between align-items-start">
-                                                    <div>
-                                                        <h6 class="mb-1">@grade.CourseTitle</h6>
-                                                        <p class="text-muted small mb-0">@grade.CreditHours credits • Submitted @grade.Marks marks</p>
-                                                    </div>
-                                                    <div class="text-end">
-                                                        <span class="badge @GetGradeBadgeClass(grade.LetterGrade) fs-6 px-3 py-1">
-                                                            @grade.LetterGrade
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="text-center py-4">
-                                        <i class="bi bi-clipboard-check display-1 text-muted mb-3"></i>
-                                        <p class="text-muted">No grades recorded yet.</p>
-                                    </div>
-                                }
-                            </div>
-                            <div class="card-footer bg-light py-3">
-                                <a href="/grades" class="btn btn-outline-primary btn-sm w-100">
-                                    <i class="bi bi-list-check me-1"></i> View All Grades
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Upcoming Deadlines (placeholder) -->
-                <div class="row mt-4">
-                    <div class="col">
-                        <div class="card shadow border-0">
-                            <div class="card-header bg-light py-3">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-calendar-event me-2"></i>
-                                    Upcoming Deadlines
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Course</th>
-                                                <th>Assignment</th>
-                                                <th>Due Date</th>
-                                                <th>Status</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>CS-201 Data Structures</td>
-                                                <td>Project: Binary Search Tree</td>
-                                                <td>May 15, 2026</td>
-                                                <td><span class="badge bg-warning">Pending</span></td>
-                                                <td><a href="#" class="btn btn-sm btn-outline-primary">Submit</a></td>
-                                            </tr>
-                                            <tr>
-                                                <td>CS-301 Database Systems</td>
-                                                <td>Quiz #3: SQL Queries</td>
-                                                <td>May 18, 2026</td>
-                                                <td><span class="badge bg-info">Upcoming</span></td>
-                                                <td><a href="#" class="btn btn-sm btn-outline-secondary">Start</a></td>
-                                            </tr>
-                                            <tr>
-                                                <td>CS-284 Visual Programming</td>
-                                                <td>Lab 5: UI Components</td>
-                                                <td>May 20, 2026</td>
-                                                <td><span class="badge bg-success">Submitted</span></td>
-                                                <td><a href="#" class="btn btn-sm btn-outline-success">View</a></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="stat-label">Current CGPA</div>
+                    <div class="stat-value text-success">@Student.CGPA.ToString("0.00")</div>
+                    <div class="progress mt-2" style="height:6px;">
+                        <div class="progress-bar bg-success" style="width:@(Math.Min(100, (double)Student.CGPA / 4 * 100))%"></div>
                     </div>
                 </div>
             </div>
-        }
-    </RoleLayout>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon"><i class="bi bi-calendar3"></i></div>
+                    <div class="stat-label">Semester</div>
+                    <div class="stat-value">@Student.Semester</div>
+                    <div class="text-muted" style="font-size:.85rem;margin-top:.25rem;">of 8</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon" style="background:#fef3c7;color:#d97706;">
+                        <i class="bi bi-journal-bookmark-fill"></i>
+                    </div>
+                    <div class="stat-label">Enrolled courses</div>
+                    <div class="stat-value">@Student.Enrollments.Count</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick actions -->
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a class="btn btn-primary" href="/student/enroll">
+            <i class="bi bi-plus-circle"></i> Enroll in a course
+        </a>
+        <a class="btn btn-outline-primary" href="/student/grades">
+            <i class="bi bi-award"></i> View my grades
+        </a>
+    </div>
+
+    <!-- My courses -->
+    <h4 class="mb-3" style="font-size:1.05rem;color:var(--ec-text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;">My courses</h4>
+    @if (!Student.Enrollments.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <span>You aren't enrolled in any courses yet. <a href="/student/enroll" class="ms-1">Browse the catalog →</a></span>
+        </div>
+    }
+    else
+    {
+        <div class="list-group">
+            @foreach (var c in Student.Enrollments.OrderBy(c => c.Title))
+            {
+                <div class="list-group-item d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div>
+                        <div class="fw-bold">@c.Code</div>
+                        <div class="text-muted" style="font-size:.88rem;">@c.Title</div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="badge bg-primary">@c.CreditHours cr</span>
+                        <StatusBadge Status="@c.EnrollmentStatus.ToString()" />
+                    </div>
+                </div>
+            }
+        </div>
+    }
 </AuthGuard>
 
 @code {
-    private Student? currentStudent;
-    private List<Course> enrolledCourses = new();
-    private List<GradeRecord> recentGrades = new();
-    private int enrolledCount = 0;
-    private int completedCredits = 0;
-    private int pendingAssignments = 3;
-    private string averageGrade = "B+";
-    private int gradesCount = 0;
-
-    protected override void OnInitialized()
-    {
-        var currentUser = AuthState.State.CurrentUser;
-        if (currentUser is Student student)
-        {
-            currentStudent = student;
-            LoadStudentData();
-        }
-    }
-
-    private void LoadStudentData()
-    {
-        if (currentStudent == null) return;
-
-        // Get enrolled courses
-        enrolledCourses = currentStudent.Enrollments;
-        enrolledCount = enrolledCourses.Count;
-
-        // Calculate completed credits (simplified: sum of credit hours of completed courses)
-        completedCredits = enrolledCourses.Sum(c => c.CreditHours);
-
-        // Get recent grades (from GradeService)
-        var allGrades = GradeService.GetGradesForStudent(currentStudent.Id);
-        recentGrades = allGrades
-            .OrderByDescending(g => g.Id) // placeholder ordering
-            .Take(5)
-            .ToList();
-        gradesCount = recentGrades.Count;
-
-        // Calculate average grade (placeholder)
-        if (gradesCount > 0)
-        {
-            var avgMarks = recentGrades.Average(g => g.Marks);
-            averageGrade = GetLetterGrade(avgMarks);
-        }
-    }
-
-    private string GetLetterGrade(double marks)
-    {
-        return marks >= 85 ? "A" :
-               marks >= 70 ? "B" :
-               marks >= 55 ? "C" :
-               marks >= 45 ? "D" : "F";
-    }
-
-    private string GetGradeBadgeClass(string letterGrade)
-    {
-        return letterGrade switch
-        {
-            "A" => "bg-success",
-            "B" => "bg-info",
-            "C" => "bg-warning",
-            "D" => "bg-secondary",
-            _ => "bg-danger"
-        };
-    }
+    global::EduConnect.Models.Student Student => (global::EduConnect.Models.Student)AuthState.State.CurrentUser!;
 }

@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "x0t6W6A/xSc=",
+  "dgSpecHash": "BUBOAIs7RJw=",
   "success": true,
-  "projectFilePath": "/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/EduConnect.csproj",
+  "projectFilePath": "/Users/Raheem/Downloads/EduConnect_redesigned/EduConnect.csproj",
   "expectedPackageFiles": [
     "/Users/Raheem/.nuget/packages/microsoft.aspnetcore.app.internal.assets/10.0.3/microsoft.aspnetcore.app.internal.assets.10.0.3.nupkg.sha512"
   ],

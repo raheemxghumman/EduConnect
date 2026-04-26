@@ -1,7 +1,7 @@
 @using EduConnect.Models
 @using EduConnect.Services
 @inject AuthStateService AuthState
-@inject StudentService StudentService
+@inject IStudentService StudentService
 @inject NavigationManager Nav
 
 <div class="card h-100 shadow-sm border-0">
@@ -88,7 +88,7 @@
 
 @code {
     [Parameter]
-    public Student Student { get; set; } = default!;
+    public global::EduConnect.Models.Student Student { get; set; } = default!;
 
     [Parameter]
     public bool ShowActions { get; set; } = true;

@@ -143,7 +143,7 @@
 
     private int GetFacultyCourseCount()
     {
-        if (AuthState.State.CurrentUser is Faculty faculty)
+        if (AuthState.State.CurrentUser is global::EduConnect.Models.Faculty faculty)
         {
             return faculty.AssignedCourses.Count;
         }
@@ -152,7 +152,7 @@
 
     private string GetStudentCGPA()
     {
-        if (AuthState.State.CurrentUser is Student student)
+        if (AuthState.State.CurrentUser is global::EduConnect.Models.Student student)
         {
             return student.CGPA.ToString("0.00");
         }
@@ -161,7 +161,7 @@
 
     private int GetStudentEnrollmentCount()
     {
-        if (AuthState.State.CurrentUser is Student student)
+        if (AuthState.State.CurrentUser is global::EduConnect.Models.Student student)
         {
             return student.Enrollments.Count;
         }

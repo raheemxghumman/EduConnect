@@ -1,112 +1,101 @@
 @page "/login"
+@layout EmptyLayout
 @using EduConnect.Services
 @using EduConnect.Models
 @inject AuthStateService AuthState
 @inject NavigationManager Nav
 
 <AuthGuard RequireAuth="false">
-    <RoleLayout>
-        <div class="container py-5">
-            <div class="row justify-content-center">
-                <div class="col-md-6 col-lg-5">
-                    <div class="card shadow border-0">
-                        <div class="card-header bg-primary text-white text-center py-3">
-                            <h4 class="mb-0">
-                                <i class="bi bi-box-arrow-in-right me-2"></i>
-                                Sign In to EduConnect
-                            </h4>
+    <div class="auth-shell">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h4><i class="bi bi-mortarboard-fill me-2"></i>Welcome back</h4>
+                <p>Sign in to your EduConnect account</p>
+            </div>
+            <div class="auth-body">
+                <div class="mb-3">
+                    <label for="email" class="form-label">
+                        <i class="bi bi-envelope me-1 text-muted"></i> Email address
+                    </label>
+                    <input id="email" type="email"
+                           @bind="loginModel.Email" @bind:event="oninput"
+                           @onblur="() => emailTouched = true"
+                           class="form-control @(emailTouched && string.IsNullOrEmpty(loginModel.Email) ? "is-invalid" : "")"
+                           placeholder="you@educonnect.edu"
+                           autocomplete="email" />
+                    @if (emailTouched && string.IsNullOrEmpty(loginModel.Email))
+                    {
+                        <div class="invalid-feedback">Email is required</div>
+                    }
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">
+                        <i class="bi bi-lock me-1 text-muted"></i> Password
+                    </label>
+                    <input id="password" type="password"
+                           @bind="loginModel.Password" @bind:event="oninput"
+                           @onblur="() => passwordTouched = true"
+                           class="form-control @(passwordTouched && string.IsNullOrEmpty(loginModel.Password) ? "is-invalid" : "")"
+                           placeholder="Enter your password"
+                           autocomplete="current-password" />
+                    @if (passwordTouched && string.IsNullOrEmpty(loginModel.Password))
+                    {
+                        <div class="invalid-feedback">Password is required</div>
+                    }
+                </div>
+
+                <button type="button" class="btn btn-primary w-100 btn-lg mb-3"
+                        disabled="@isLoggingIn" @onclick="HandleLogin">
+                    @if (isLoggingIn)
+                    {
+                        <span class="spinner-border spinner-border-sm me-2" role="status"></span>
+                        <span>Signing in…</span>
+                    }
+                    else
+                    {
+                        <i class="bi bi-box-arrow-in-right"></i>
+                        <span>Sign in</span>
+                    }
+                </button>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger mb-3">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <span>@errorMessage</span>
+                    </div>
+                }
+
+                <div class="auth-link">
+                    Don't have an account? <a href="/register">Create one →</a>
+                </div>
+
+                <hr />
+
+                <div class="alert alert-info" style="margin-bottom:0;">
+                    <div>
+                        <div class="fw-bold mb-2">
+                            <i class="bi bi-info-circle"></i> Demo credentials
                         </div>
-                        <div class="card-body p-4">
-                            <div>
-                                <div class="mb-3">
-                                    <label for="email" class="form-label">Email Address</label>
-                                    <input id="email" @bind="loginModel.Email" @bind:event="oninput" @onblur="() => emailTouched = true" class="form-control" placeholder="user@educonnect.edu" />
-                                    @if (string.IsNullOrEmpty(loginModel.Email) && emailTouched)
-                                    {
-                                        <div class="text-danger small">Email is required</div>
-                                    }
-                                </div>
-
-                                <div class="mb-3">
-                                    <label for="password" class="form-label">Password</label>
-                                    <input id="password" type="password" @bind="loginModel.Password" @bind:event="oninput" @onblur="() => passwordTouched = true" class="form-control" placeholder="Enter your password" />
-                                    @if (string.IsNullOrEmpty(loginModel.Password) && passwordTouched)
-                                    {
-                                        <div class="text-danger small">Password is required</div>
-                                    }
-                                </div>
-
-                                <div class="d-grid mb-3">
-                                    <button type="button" class="btn btn-primary btn-lg" disabled="@isLoggingIn" @onclick="HandleLogin" @onclick:preventDefault="true">
-                                        @if (isLoggingIn)
-                                        {
-                                            <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                            <span>Signing In...</span>
-                                        }
-                                        else
-                                        {
-                                            <i class="bi bi-box-arrow-in-right me-2"></i>
-                                            <span>Sign In</span>
-                                        }
-                                    </button>
-                                </div>
-
-                                @if (!string.IsNullOrEmpty(errorMessage))
-                                {
-                                    <div class="alert alert-danger mb-3">
-                                        <i class="bi bi-exclamation-triangle me-2"></i>
-                                        @errorMessage
-                                    </div>
-                                }
-                            </div>
-
-                            <div class="text-center mt-4">
-                                <p class="text-muted small mb-2">
-                                    Don't have an account?
-                                    <a href="/register" class="ms-1">Create one here</a>
-                                </p>
-                                <hr class="my-3" />
-                                <div class="alert alert-info small">
-                                    <h6 class="alert-heading mb-2">
-                                        <i class="bi bi-info-circle me-1"></i>
-                                        Demo Credentials
-                                    </h6>
-                                    <ul class="mb-0 ps-3">
-                                        <li><strong>Admin:</strong> admin@educonnect.edu / admin123</li>
-                                        <li><strong>Faculty:</strong> faculty@educonnect.edu / faculty123</li>
-                                        <li><strong>Student:</strong> student@educonnect.edu / student123</li>
-                                    </ul>
-                                </div>
-                            </div>
+                        <div style="font-size:.85rem; line-height:1.7;">
+                            <div><strong>Admin</strong> · admin@edu.pk / admin123</div>
+                            <div><strong>Faculty</strong> · ayesha@edu.pk / faculty123</div>
+                            <div><strong>Student</strong> · wania@student.edu.pk / student123</div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
-    </RoleLayout>
+    </div>
 </AuthGuard>
 
 @code {
-    [CascadingParameter]
-    private EditContext? EditContext { get; set; }
-
     private LoginModel loginModel = new();
     private bool isLoggingIn = false;
     private string? errorMessage;
     private bool emailTouched = false;
     private bool passwordTouched = false;
-
-    private void UpdateEmail(ChangeEventArgs e)
-    {
-        loginModel.Email = e.Value?.ToString() ?? "";
-        EditContext?.NotifyFieldChanged(new FieldIdentifier(loginModel, nameof(loginModel.Email)));
-    }
-
-    private void UpdatePassword(ChangeEventArgs e)
-    {
-        loginModel.Password = e.Value?.ToString() ?? "";
-        EditContext?.NotifyFieldChanged(new FieldIdentifier(loginModel, nameof(loginModel.Password)));
-    }
 
     private class LoginModel
     {
@@ -134,27 +123,11 @@
 
         try
         {
-            // Simulate network delay
             await Task.Delay(300);
-
             var success = AuthState.Login(loginModel.Email, loginModel.Password);
             if (success)
             {
-                // Redirect to dashboard based on role
-                var user = AuthState.State.CurrentUser;
-                if (user == null)
-                {
-                    errorMessage = "Login succeeded but CurrentUser is null.";
-                    return;
-                }
-                var redirectPath = user switch
-                {
-                    Admin => "/admin/dashboard",
-                    Faculty => "/faculty/dashboard",
-                    Student => "/student/dashboard",
-                    _ => "/"
-                };
-                Nav.NavigateTo(redirectPath, forceLoad: false);
+                Nav.NavigateTo("/dashboard", forceLoad: false);
             }
             else
             {

@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/EduConnect.csproj": {}
+    "/Users/Raheem/Downloads/EduConnect_redesigned/EduConnect.csproj": {}
   },
   "projects": {
-    "/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/EduConnect.csproj": {
+    "/Users/Raheem/Downloads/EduConnect_redesigned/EduConnect.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/EduConnect.csproj",
+        "projectUniqueName": "/Users/Raheem/Downloads/EduConnect_redesigned/EduConnect.csproj",
         "projectName": "EduConnect",
-        "projectPath": "/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/EduConnect.csproj",
+        "projectPath": "/Users/Raheem/Downloads/EduConnect_redesigned/EduConnect.csproj",
         "packagesPath": "/Users/Raheem/.nuget/packages/",
-        "outputPath": "/Users/Raheem/Desktop/VP-assignment-2/VP-Assignment-2/EduConnect/obj/",
+        "outputPath": "/Users/Raheem/Downloads/EduConnect_redesigned/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "/Users/Raheem/.nuget/NuGet/NuGet.Config"

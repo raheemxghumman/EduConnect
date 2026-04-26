@@ -6,83 +6,57 @@ using EduConnect.Models;
 
 namespace EduConnect.Services
 {
+    /// <summary>
+    /// SRP: Handles grade submission and CGPA calculation only. DIP: Receives notification/course dependencies through DI.
+    /// </summary>
     public class GradeService : IGradeService
     {
-        private List<GradeRecord> _grades = new();
+        private readonly NotificationService _notifications;
+        private readonly ICourseService _courses;
+        private readonly List<GradeRecord> _grades = new();
+
+        public GradeService(NotificationService notifications, ICourseService courses)
+        {
+            _notifications = notifications;
+            _courses = courses;
+        }
 
         public void SubmitGrade(GradeRecord grade)
         {
-            // Validation
-            if (grade.Marks < 0 || grade.Marks > 100)
-                throw new ArgumentException("Marks must be between 0 and 100.");
-            if (grade.CreditHours <= 0)
-                throw new ArgumentException("Credit hours must be positive.");
-            if (string.IsNullOrWhiteSpace(grade.CourseTitle))
-                throw new ArgumentException("Course title is required.");
-
-            // Check if grade already exists for this student and course
-            var existing = _grades.FirstOrDefault(g => 
-                g.StudentId == grade.StudentId && g.CourseId == grade.CourseId);
-            
+            if (grade.Marks < 0 || grade.Marks > 100) throw new ArgumentException("Marks must be between 0 and 100.");
+            if (grade.CreditHours <= 0) throw new ArgumentException("Credit hours must be positive.");
+            if (string.IsNullOrWhiteSpace(grade.CourseTitle)) throw new ArgumentException("Course title is required.");
+            var existing = _grades.FirstOrDefault(g => g.StudentId == grade.StudentId && g.CourseId == grade.CourseId);
             if (existing != null)
             {
-                // Update existing grade
                 existing.Marks = grade.Marks;
                 existing.CourseTitle = grade.CourseTitle;
                 existing.CreditHours = grade.CreditHours;
             }
             else
             {
-                // Add new grade
                 _grades.Add(grade);
             }
-
-            // Update student's CGPA
-            UpdateStudentCGPA(grade.StudentId);
+            var student = SeedData.Students.FirstOrDefault(s => s.Id == grade.StudentId);
+            if (student != null)
+            {
+                student.Grades.RemoveAll(g => g.CourseId == grade.CourseId);
+                student.Grades.Add(existing ?? grade);
+                student.CGPA = ComputeCGPA(grade.StudentId);
+                _notifications.AddNotification($"A grade was posted for {grade.CourseTitle}: {grade.LetterGrade} ({grade.Marks}).", NotificationType.GradePosted, student.Id);
+            }
         }
 
-        public List<GradeRecord> GetGradesForCourse(Guid courseId)
-        {
-            return _grades
-                .Where(g => g.CourseId == courseId)
-                .OrderBy(g => g.StudentId)
-                .ToList();
-        }
-
-        public List<GradeRecord> GetGradesForStudent(Guid studentId)
-        {
-            return _grades
-                .Where(g => g.StudentId == studentId)
-                .OrderBy(g => g.CourseTitle)
-                .ToList();
-        }
+        public List<GradeRecord> GetGradesForCourse(Guid courseId) => _grades.Where(g => g.CourseId == courseId).OrderBy(g => g.CourseTitle).ToList();
+        public List<GradeRecord> GetGradesForStudent(Guid studentId) => _grades.Where(g => g.StudentId == studentId).OrderBy(g => g.CourseTitle).ToList();
 
         public decimal ComputeCGPA(Guid studentId)
         {
             var studentGrades = GetGradesForStudent(studentId);
-            if (!studentGrades.Any())
-                return 0.0m;
-
-            decimal totalGradePoints = 0;
-            int totalCreditHours = 0;
-
-            foreach (var grade in studentGrades)
-            {
-                totalGradePoints += grade.GradePoints * grade.CreditHours;
-                totalCreditHours += grade.CreditHours;
-            }
-
-            return totalCreditHours > 0 ? totalGradePoints / totalCreditHours : 0.0m;
-        }
-
-        private void UpdateStudentCGPA(Guid studentId)
-        {
-            var cgpa = ComputeCGPA(studentId);
-            var student = SeedData.Students.FirstOrDefault(s => s.Id == studentId);
-            if (student != null)
-            {
-                student.CGPA = cgpa;
-            }
+            var totalCredits = studentGrades.Sum(g => g.CreditHours);
+            if (totalCredits == 0) return 0.0m;
+            var weighted = studentGrades.Sum(g => g.GradePoints * g.CreditHours) / totalCredits;
+            return Math.Round(weighted, 2);
         }
     }
 }

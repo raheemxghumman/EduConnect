@@ -13,174 +13,37 @@ namespace EduConnect.Services
 
         static SeedData()
         {
-            // Create Admin
-            var admin = new Admin
-            {
-                Id = Guid.Parse("11111111-1111-1111-1111-111111111111"),
-                FullName = "System Administrator",
-                Email = "admin@educonnect.edu",
-                PasswordHash = "admin123" // In real app, this would be hashed
-            };
-            Users.Add(admin);
+            var admin = new Admin { Id = Guid.Parse("11111111-1111-1111-1111-111111111111"), FullName = "Dr. Admin", Email = "admin@edu.pk", PasswordHash = "admin123" };
+            var ayesha = new Faculty { Id = Guid.Parse("22222222-2222-2222-2222-222222222222"), FullName = "Dr. Ayesha Khan", Email = "ayesha@edu.pk", PasswordHash = "faculty123" };
+            var bilal = new Faculty { Id = Guid.Parse("33333333-3333-3333-3333-333333333333"), FullName = "Prof. Bilal Ahmed", Email = "bilal@edu.pk", PasswordHash = "faculty123" };
 
-            // Create Faculty
-            var faculty1 = new Faculty
-            {
-                Id = Guid.Parse("22222222-2222-2222-2222-222222222222"),
-                FullName = "Dr. Sarah Johnson",
-                Email = "sarah.johnson@educonnect.edu",
-                PasswordHash = "faculty123"
-            };
-            var faculty2 = new Faculty
-            {
-                Id = Guid.Parse("33333333-3333-3333-3333-333333333333"),
-                FullName = "Prof. Michael Chen",
-                Email = "michael.chen@educonnect.edu",
-                PasswordHash = "faculty123"
-            };
-            var faculty3 = new Faculty
-            {
-                Id = Guid.Parse("44444444-4444-4444-4444-444444444444"),
-                FullName = "Dr. Emily Williams",
-                Email = "emily.williams@educonnect.edu",
-                PasswordHash = "faculty123"
-            };
-            
-            Users.Add(faculty1);
-            Users.Add(faculty2);
-            Users.Add(faculty3);
-            Faculty.Add(faculty1);
-            Faculty.Add(faculty2);
-            Faculty.Add(faculty3);
+            var wania = new Student { Id = Guid.Parse("55555555-5555-5555-5555-555555555555"), FullName = "Wania Rahman", Email = "wania@student.edu.pk", PasswordHash = "student123", Semester = 3, CGPA = 3.6m };
+            var roman = new Student { Id = Guid.Parse("66666666-6666-6666-6666-666666666666"), FullName = "Roman Fatima", Email = "roman@student.edu.pk", PasswordHash = "student123", Semester = 2, CGPA = 3.2m };
+            var abdul = new Student { Id = Guid.Parse("77777777-7777-7777-7777-777777777777"), FullName = "Abdulraheem", Email = "raheem@student.edu.pk", PasswordHash = "student123", Semester = 4, CGPA = 3.4m };
+            var sara = new Student { Id = Guid.Parse("88888888-8888-8888-8888-888888888888"), FullName = "Sara Malik", Email = "sara@student.edu.pk", PasswordHash = "student123", Semester = 1, CGPA = 2.9m };
+            var ali = new Student { Id = Guid.Parse("99999999-9999-9999-9999-999999999999"), FullName = "Ali Hassan", Email = "ali@student.edu.pk", PasswordHash = "student123", Semester = 2, CGPA = 3.0m };
 
-            // Create Students
-            var student1 = new Student
-            {
-                Id = Guid.Parse("55555555-5555-5555-5555-555555555555"),
-                FullName = "Alice Brown",
-                Email = "alice.brown@educonnect.edu",
-                PasswordHash = "student123",
-                Semester = 3,
-                CGPA = 3.8m
-            };
-            var student2 = new Student
-            {
-                Id = Guid.Parse("66666666-6666-6666-6666-666666666666"),
-                FullName = "Bob Smith",
-                Email = "bob.smith@educonnect.edu",
-                PasswordHash = "student123",
-                Semester = 2,
-                CGPA = 3.2m
-            };
-            var student3 = new Student
-            {
-                Id = Guid.Parse("77777777-7777-7777-7777-777777777777"),
-                FullName = "Charlie Davis",
-                Email = "charlie.davis@educonnect.edu",
-                PasswordHash = "student123",
-                Semester = 1,
-                CGPA = 2.9m
-            };
-            var student4 = new Student
-            {
-                Id = Guid.Parse("88888888-8888-8888-8888-888888888888"),
-                FullName = "Diana Miller",
-                Email = "diana.miller@educonnect.edu",
-                PasswordHash = "student123",
-                Semester = 4,
-                CGPA = 3.5m
-            };
-            var student5 = new Student
-            {
-                Id = Guid.Parse("99999999-9999-9999-9999-999999999999"),
-                FullName = "Ethan Wilson",
-                Email = "ethan.wilson@educonnect.edu",
-                PasswordHash = "student123",
-                Semester = 2,
-                CGPA = 3.0m
-            };
-            
-            Users.Add(student1);
-            Users.Add(student2);
-            Users.Add(student3);
-            Users.Add(student4);
-            Users.Add(student5);
-            Students.Add(student1);
-            Students.Add(student2);
-            Students.Add(student3);
-            Students.Add(student4);
-            Students.Add(student5);
+            Users.AddRange(new Person[] { admin, ayesha, bilal, wania, roman, abdul, sara, ali });
+            Faculty.AddRange(new[] { ayesha, bilal });
+            Students.AddRange(new[] { wania, roman, abdul, sara, ali });
 
-            // Create Courses
-            var course1 = new Course
-            {
-                Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
-                Code = "CS101",
-                Title = "Introduction to Computer Science",
-                CreditHours = 3,
-                MaxCapacity = 30,
-                AssignedFacultyId = faculty1.Id
-            };
-            var course2 = new Course
-            {
-                Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
-                Code = "MATH201",
-                Title = "Calculus II",
-                CreditHours = 4,
-                MaxCapacity = 25,
-                AssignedFacultyId = faculty2.Id
-            };
-            var course3 = new Course
-            {
-                Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"),
-                Code = "PHYS101",
-                Title = "University Physics",
-                CreditHours = 4,
-                MaxCapacity = 35,
-                AssignedFacultyId = faculty3.Id
-            };
-            var course4 = new Course
-            {
-                Id = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"),
-                Code = "ENG102",
-                Title = "Academic Writing",
-                CreditHours = 3,
-                MaxCapacity = 40,
-                AssignedFacultyId = faculty1.Id
-            };
-            var course5 = new Course
-            {
-                Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"),
-                Code = "CS301",
-                Title = "Data Structures",
-                CreditHours = 3,
-                MaxCapacity = 20,
-                AssignedFacultyId = faculty2.Id
-            };
-            var course6 = new Course
-            {
-                Id = Guid.Parse("ffffffff-ffff-ffff-ffff-ffffffffffff"),
-                Code = "BUS202",
-                Title = "Business Ethics",
-                CreditHours = 3,
-                MaxCapacity = 30,
-                AssignedFacultyId = faculty3.Id
-            };
-            
-            Courses.Add(course1);
-            Courses.Add(course2);
-            Courses.Add(course3);
-            Courses.Add(course4);
-            Courses.Add(course5);
-            Courses.Add(course6);
+            var cs101 = new Course { Id = Guid.Parse("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"), Code = "CS-101", Title = "Introduction to Programming", CreditHours = 3, MaxCapacity = 30, AssignedFacultyId = ayesha.Id };
+            var cs201 = new Course { Id = Guid.Parse("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"), Code = "CS-201", Title = "Data Structures", CreditHours = 3, MaxCapacity = 30, AssignedFacultyId = ayesha.Id };
+            var cs401 = new Course { Id = Guid.Parse("cccccccc-cccc-cccc-cccc-cccccccccccc"), Code = "CS-401", Title = "Artificial Intelligence", CreditHours = 3, MaxCapacity = 2, AssignedFacultyId = ayesha.Id };
+            var cs284 = new Course { Id = Guid.Parse("dddddddd-dddd-dddd-dddd-dddddddddddd"), Code = "CS-284", Title = "Web Engineering", CreditHours = 3, MaxCapacity = 25, AssignedFacultyId = bilal.Id };
+            var se301 = new Course { Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee"), Code = "SE-301", Title = "Software Design Patterns", CreditHours = 3, MaxCapacity = 20, AssignedFacultyId = bilal.Id };
+            Courses.AddRange(new[] { cs101, cs201, cs401, cs284, se301 });
 
-            // Assign courses to faculty (add Course objects to their AssignedCourses list)
-            faculty1.AssignedCourses.Add(course1);
-            faculty1.AssignedCourses.Add(course4);
-            faculty2.AssignedCourses.Add(course2);
-            faculty2.AssignedCourses.Add(course5);
-            faculty3.AssignedCourses.Add(course3);
-            faculty3.AssignedCourses.Add(course6);
+            ayesha.AssignedCourses.AddRange(new[] { cs101, cs201, cs401 });
+            bilal.AssignedCourses.AddRange(new[] { cs284, se301 });
+
+            cs101.Enrolled.AddRange(new[] { wania, roman, abdul });
+            cs201.Enrolled.AddRange(new[] { wania, sara });
+            cs401.Enrolled.AddRange(new[] { wania, roman });
+            wania.Enrollments.AddRange(new[] { cs101, cs201, cs401 });
+            roman.Enrollments.AddRange(new[] { cs101, cs401 });
+            abdul.Enrollments.Add(cs101);
+            sara.Enrollments.Add(cs201);
         }
     }
 }

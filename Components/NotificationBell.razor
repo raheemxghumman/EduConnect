@@ -1,18 +1,17 @@
 @using EduConnect.Models
+@implements IDisposable
 @using EduConnect.Services
 @inject AuthStateService AuthState
 @inject NotificationService NotificationService
 @inject NavigationManager Nav
 
 <div class="dropdown">
-    <button class="btn btn-link text-decoration-none position-relative p-0" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-        <i class="bi bi-bell fs-5"></i>
+    <button class="notif-bell" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false" aria-label="Notifications">
+        <i class="bi bi-bell"></i>
         @if (UnreadCount > 0)
         {
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                @UnreadCount
-                <span class="visually-hidden">unread notifications</span>
-            </span>
+            <span class="notif-badge">@(UnreadCount > 99 ? "99+" : UnreadCount.ToString())</span>
+            <span class="visually-hidden">@UnreadCount unread notifications</span>
         }
     </button>
     
@@ -32,7 +31,7 @@
             <div class="list-group list-group-flush">
                 @foreach (var notification in Notifications)
                 {
-                    <a href="#" class="list-group-item list-group-item-action border-0 @(notification.IsRead ? "" : "bg-light")" @onclick="() => MarkAsRead(notification)">
+                    <button type="button" class="list-group-item list-group-item-action border-0 text-start @(notification.IsRead ? "" : "bg-light")" @onclick="() => MarkAsRead(notification)">
                         <div class="d-flex w-100 justify-content-between">
                             <h6 class="mb-1">
                                 <i class="bi @GetNotificationIcon(notification.NotificationType) me-2"></i>
@@ -45,7 +44,7 @@
                         {
                             <span class="badge bg-primary">New</span>
                         }
-                    </a>
+                    </button>
                 }
             </div>
             

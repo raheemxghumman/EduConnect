@@ -1,109 +1,23 @@
 @using EduConnect.Models
-@using EduConnect.Services
 @inject AuthStateService AuthState
 @inject NavigationManager Nav
 
-@if (!RequireAuth)
+@if (CanRender)
 {
     @ChildContent
 }
-else if (AuthState.State.IsAuthenticated)
-{
-    @if (string.IsNullOrEmpty(RequiredRole) || AuthState.State.Role == RequiredRole)
-    {
-        @ChildContent
-    }
-    else
-    {
-        <div class="container mt-5">
-            <div class="row justify-content-center">
-                <div class="col-md-6">
-                    <div class="card border-danger">
-                        <div class="card-header bg-danger text-white">
-                            <h5 class="mb-0">
-                                <i class="bi bi-shield-exclamation me-2"></i>
-                                Access Denied
-                            </h5>
-                        </div>
-                        <div class="card-body text-center">
-                            <i class="bi bi-person-x display-1 text-danger mb-3"></i>
-                            <h4>Insufficient Permissions</h4>
-                            <p class="text-muted">
-                                You need <span class="badge bg-primary">@RequiredRole</span> role to access this page.
-                                Your current role is <span class="badge bg-secondary">@AuthState.State.Role</span>.
-                            </p>
-                            <button class="btn btn-outline-primary" @onclick="GoToDashboard">
-                                <i class="bi bi-house-door me-1"></i> Go to Dashboard
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    }
-}
-else
-{
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6">
-                <div class="card border-warning">
-                    <div class="card-header bg-warning text-dark">
-                        <h5 class="mb-0">
-                            <i class="bi bi-lock me-2"></i>
-                            Authentication Required
-                        </h5>
-                    </div>
-                    <div class="card-body text-center">
-                        <i class="bi bi-person-lock display-1 text-warning mb-3"></i>
-                        <h4>Please Sign In</h4>
-                        <p class="text-muted">
-                            You need to be logged in to access this page.
-                        </p>
-                        <a class="btn btn-primary" href="/login">
-                            <i class="bi bi-box-arrow-in-right me-1"></i> Go to Login
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-}
 
 @code {
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
-
-    [Parameter]
-    public string? RequiredRole { get; set; }
-
-    [Parameter]
-    public bool RequireAuth { get; set; } = true;
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? RequiredRole { get; set; }
+    [Parameter] public bool RequireAuth { get; set; } = true;
+    private bool CanRender { get; set; }
 
     protected override void OnInitialized()
     {
-        // If not authenticated and trying to access protected page, redirect to login
-        if (!AuthState.State.IsAuthenticated && RequireAuth)
-        {
-            // We'll show the login UI instead of redirecting
-        }
-    }
-
-    private void GoToLogin()
-    {
-        Nav.NavigateTo("/login");
-    }
-
-    private void GoToDashboard()
-    {
-        var role = AuthState.State.Role;
-        var path = role switch
-        {
-            "Admin" => "/admin/dashboard",
-            "Faculty" => "/faculty/dashboard",
-            "Student" => "/student/dashboard",
-            _ => "/"
-        };
-        Nav.NavigateTo(path);
+        if (!RequireAuth) { CanRender = true; return; }
+        if (!AuthState.State.IsAuthenticated) { Nav.NavigateTo("/login"); return; }
+        if (!string.IsNullOrWhiteSpace(RequiredRole) && AuthState.State.Role != RequiredRole) { Nav.NavigateTo("/unauthorized"); return; }
+        CanRender = true;
     }
 }

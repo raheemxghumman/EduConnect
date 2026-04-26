@@ -3,22 +3,18 @@ using EduConnect.Models;
 
 namespace EduConnect.Services
 {
+    /// <summary>
+    /// SRP: Maintains the current authenticated user state and broadcasts auth changes to the UI.
+    /// </summary>
     public class AuthStateService
     {
         public AuthState State { get; private set; } = new();
-
         public event Action? OnAuthChanged;
 
         public bool Login(string email, string password)
         {
-            // Find user in seed data
-            var user = SeedData.Users.Find(u => 
-                u.Email.Equals(email, StringComparison.OrdinalIgnoreCase) &&
-                u.PasswordHash == password); // In real app, compare hashed passwords
-            
-            if (user == null)
-                return false;
-
+            var user = SeedData.Users.Find(u => u.Email.Equals(email.Trim(), StringComparison.OrdinalIgnoreCase) && u.PasswordHash == password);
+            if (user == null) return false;
             State.CurrentUser = user;
             OnAuthChanged?.Invoke();
             return true;

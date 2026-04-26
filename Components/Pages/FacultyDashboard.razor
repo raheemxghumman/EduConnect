@@ -1,318 +1,80 @@
 @page "/faculty/dashboard"
-@using EduConnect.Services
-@using EduConnect.Models
+@inject ICourseService CourseSvc
 @inject AuthStateService AuthState
-@inject ICourseService CourseService
-@inject IGradeService GradeService
 
 <AuthGuard RequiredRole="Faculty">
-    <RoleLayout>
-        @if (currentFaculty == null)
-        {
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
+    <div class="role-header">
+        <div class="d-flex align-items-center">
+            <div class="role-icon"><i class="bi bi-person-badge text-success"></i></div>
+            <div class="ms-3">
+                <h2 class="mb-1">Faculty Dashboard</h2>
+                <p class="mb-0 text-muted">
+                    Welcome, <strong>@AuthState.State.CurrentUser?.FullName</strong> ·
+                    your assigned courses & grade tools
+                </p>
+            </div>
+        </div>
+    </div>
+
+    @{
+        var myCourses = CourseSvc.GetForFaculty(AuthState.State.CurrentUser!.Id).ToList();
+        var totalEnrolled = myCourses.Sum(c => c.Enrolled.Count);
+    }
+
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon"><i class="bi bi-collection-fill"></i></div>
+                    <div class="stat-label">Assigned courses</div>
+                    <div class="stat-value">@myCourses.Count</div>
                 </div>
             </div>
-        }
-        else
-        {
-            <div class="container-fluid py-4">
-                <div class="row mb-4">
-                    <div class="col">
-                        <h2 class="fw-bold">
-                            <i class="bi bi-person-badge me-2"></i>
-                            Faculty Dashboard
-                        </h2>
-                        <p class="text-muted mb-0">
-                            Welcome, <span class="fw-semibold">@currentFaculty.FullName</span>. Manage your courses and student progress.
-                        </p>
-                    </div>
-                    <div class="col-auto">
-                        <div class="d-flex align-items-center">
-                            <span class="badge bg-primary fs-6 px-3 py-2">
-                                <i class="bi bi-mortarboard me-1"></i> @assignedCoursesCount Courses Assigned
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Stats -->
-                <div class="row mb-4">
-                    <div class="col-md-3 mb-3">
-                        <div class="card border-0 shadow-sm bg-gradient-primary text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-subtitle mb-1 opacity-75">Total Students</h6>
-                                        <h3 class="card-title mb-0">@totalStudents</h3>
-                                    </div>
-                                    <i class="bi bi-people display-6 opacity-50"></i>
-                                </div>
-                                <p class="card-text small mb-0 opacity-75">Across all your courses</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card border-0 shadow-sm bg-gradient-success text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-subtitle mb-1 opacity-75">Pending Grading</h6>
-                                        <h3 class="card-title mb-0">@pendingGrading</h3>
-                                    </div>
-                                    <i class="bi bi-clipboard-check display-6 opacity-50"></i>
-                                </div>
-                                <a href="#" class="stretched-link text-white text-decoration-none small">
-                                    Grade now <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card border-0 shadow-sm bg-gradient-warning text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-subtitle mb-1 opacity-75">Upcoming Lectures</h6>
-                                        <h3 class="card-title mb-0">@upcomingLectures</h3>
-                                    </div>
-                                    <i class="bi bi-calendar-event display-6 opacity-50"></i>
-                                </div>
-                                <a href="#" class="stretched-link text-white text-decoration-none small">
-                                    View schedule <i class="bi bi-arrow-right ms-1"></i>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3 mb-3">
-                        <div class="card border-0 shadow-sm bg-gradient-info text-white">
-                            <div class="card-body">
-                                <div class="d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h6 class="card-subtitle mb-1 opacity-75">Avg. Course Rating</h6>
-                                        <h3 class="card-title mb-0">@averageRating</h3>
-                                    </div>
-                                    <i class="bi bi-star display-6 opacity-50"></i>
-                                </div>
-                                <p class="card-text small mb-0 opacity-75">Based on student feedback</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <!-- Assigned Courses -->
-                    <div class="col-lg-8 mb-4">
-                        <div class="card shadow border-0 h-100">
-                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-3">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-journal-bookmark me-2"></i>
-                                    My Courses
-                                </h5>
-                                <a href="/courses" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-eye me-1"></i> Browse Catalog
-                                </a>
-                            </div>
-                            <div class="card-body p-0">
-                                @if (assignedCourses.Any())
-                                {
-                                    <div class="list-group list-group-flush">
-                                        @foreach (var course in assignedCourses)
-                                        {
-                                            <div class="list-group-item border-0 py-3">
-                                                <div class="d-flex justify-content-between align-items-center">
-                                                    <div>
-                                                        <h6 class="mb-1">@course.Code: @course.Title</h6>
-                                                        <div class="d-flex align-items-center text-muted small">
-                                                            <span class="me-3">
-                                                                <i class="bi bi-people me-1"></i>
-                                                                @course.Enrolled.Count / @course.MaxCapacity students
-                                                            </span>
-                                                            <span class="me-3">
-                                                                <i class="bi bi-clock me-1"></i>
-                                                                @course.CreditHours credit hours
-                                                            </span>
-                                                            <StatusBadge Status="@course.EnrollmentStatus.ToString()" />
-                                                        </div>
-                                                    </div>
-                                                    <div class="text-end">
-                                                        <a href="/courses/@course.Id" class="btn btn-outline-secondary btn-sm me-2">
-                                                            <i class="bi bi-eye me-1"></i> View
-                                                        </a>
-                                                        <a href="/faculty/grades?courseId=@course.Id" class="btn btn-primary btn-sm">
-                                                            <i class="bi bi-pencil-square me-1"></i> Grade
-                                                        </a>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        }
-                                    </div>
-                                }
-                                else
-                                {
-                                    <div class="text-center py-5">
-                                        <i class="bi bi-journal-x display-1 text-muted mb-3"></i>
-                                        <h5>No courses assigned</h5>
-                                        <p class="text-muted">You are not assigned to any courses yet.</p>
-                                        <a href="/courses" class="btn btn-primary">
-                                            <i class="bi bi-search me-1"></i> Browse Catalog
-                                        </a>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Recent Activity & Notifications -->
-                    <div class="col-lg-4 mb-4">
-                        <div class="card shadow border-0 h-100">
-                            <div class="card-header bg-light py-3">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-bell me-2"></i>
-                                    Recent Notifications
-                                </h5>
-                            </div>
-                            <div class="card-body p-0">
-                                <div class="list-group list-group-flush">
-                                    <div class="list-group-item border-0 py-3">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0">
-                                                <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
-                                            </div>
-                                            <div class="flex-grow-1 ms-3">
-                                                <h6 class="mb-1">CS-201 Enrollment Full</h6>
-                                                <p class="text-muted small mb-0">Data Structures has reached maximum capacity.</p>
-                                                <small class="text-muted">2 hours ago</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="list-group-item border-0 py-3">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0">
-                                                <i class="bi bi-check-circle text-success fs-4"></i>
-                                            </div>
-                                            <div class="flex-grow-1 ms-3">
-                                                <h6 class="mb-1">Grade Submission Reminder</h6>
-                                                <p class="text-muted small mb-0">Final grades for CS-301 are due May 30.</p>
-                                                <small class="text-muted">1 day ago</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="list-group-item border-0 py-3">
-                                        <div class="d-flex">
-                                            <div class="flex-shrink-0">
-                                                <i class="bi bi-info-circle text-info fs-4"></i>
-                                            </div>
-                                            <div class="flex-grow-1 ms-3">
-                                                <h6 class="mb-1">New Student Inquiry</h6>
-                                                <p class="text-muted small mb-0">Alice Brown requested a meeting about project guidance.</p>
-                                                <small class="text-muted">3 days ago</small>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="card-footer bg-light py-3">
-                                <a href="/notifications" class="btn btn-outline-primary btn-sm w-100">
-                                    <i class="bi bi-bell me-1"></i> View All Notifications
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Pending Grading Table -->
-                <div class="row mt-4">
-                    <div class="col">
-                        <div class="card shadow border-0">
-                            <div class="card-header bg-light py-3">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-clipboard-data me-2"></i>
-                                    Pending Grading Assignments
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <div class="table-responsive">
-                                    <table class="table table-hover mb-0">
-                                        <thead>
-                                            <tr>
-                                                <th>Course</th>
-                                                <th>Assignment</th>
-                                                <th>Submitted</th>
-                                                <th>Due Date</th>
-                                                <th>Status</th>
-                                                <th>Action</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            <tr>
-                                                <td>CS-201 Data Structures</td>
-                                                <td>Project: Binary Search Tree</td>
-                                                <td>15 submissions</td>
-                                                <td>May 15, 2026</td>
-                                                <td><span class="badge bg-warning">Pending</span></td>
-                                                <td><a href="#" class="btn btn-sm btn-primary">Grade</a></td>
-                                            </tr>
-                                            <tr>
-                                                <td>CS-301 Database Systems</td>
-                                                <td>Quiz #3: SQL Queries</td>
-                                                <td>28 submissions</td>
-                                                <td>May 18, 2026</td>
-                                                <td><span class="badge bg-info">In Progress</span></td>
-                                                <td><a href="#" class="btn btn-sm btn-outline-primary">Continue</a></td>
-                                            </tr>
-                                            <tr>
-                                                <td>CS-284 Visual Programming</td>
-                                                <td>Lab 5: UI Components</td>
-                                                <td>10 submissions</td>
-                                                <td>May 20, 2026</td>
-                                                <td><span class="badge bg-success">Graded 5/10</span></td>
-                                                <td><a href="#" class="btn btn-sm btn-outline-success">Resume</a></td>
-                                            </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon" style="background:#dcfce7;color:var(--ec-success);"><i class="bi bi-people-fill"></i></div>
+                    <div class="stat-label">Students enrolled</div>
+                    <div class="stat-value">@totalEnrolled</div>
                 </div>
             </div>
-        }
-    </RoleLayout>
+        </div>
+        <div class="col-md-4">
+            <div class="card stat-card h-100">
+                <div class="card-body">
+                    <div class="stat-icon" style="background:#fef3c7;color:#d97706;"><i class="bi bi-clock-history"></i></div>
+                    <div class="stat-label">Credit hours</div>
+                    <div class="stat-value">@myCourses.Sum(c => c.CreditHours)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex flex-wrap gap-2 mb-4">
+        <a class="btn btn-primary" href="/faculty/grades">
+            <i class="bi bi-pencil-square"></i> Submit grades
+        </a>
+        <a class="btn btn-outline-primary" href="/faculty/courses">
+            <i class="bi bi-collection"></i> View all my courses
+        </a>
+    </div>
+
+    <h4 class="mb-3" style="font-size:1.05rem;color:var(--ec-text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.05em;">My courses</h4>
+    @if (!myCourses.Any())
+    {
+        <div class="alert alert-info">
+            <i class="bi bi-info-circle"></i>
+            <span>You have no courses assigned yet.</span>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+            @foreach (var c in myCourses)
+            {
+                <div class="col"><CourseCard Course="c" /></div>
+            }
+        </div>
+    }
 </AuthGuard>
-
-@code {
-    private Faculty? currentFaculty;
-    private List<Course> assignedCourses = new();
-    private int assignedCoursesCount = 0;
-    private int totalStudents = 0;
-    private int pendingGrading = 5;
-    private int upcomingLectures = 3;
-    private string averageRating = "4.2";
-
-    protected override void OnInitialized()
-    {
-        var currentUser = AuthState.State.CurrentUser;
-        if (currentUser is Faculty faculty)
-        {
-            currentFaculty = faculty;
-            LoadFacultyData();
-        }
-    }
-
-    private void LoadFacultyData()
-    {
-        if (currentFaculty == null) return;
-
-        // Get assigned courses
-        assignedCourses = currentFaculty.AssignedCourses;
-        assignedCoursesCount = assignedCourses.Count;
-
-        // Calculate total students across all assigned courses
-        totalStudents = assignedCourses.Sum(c => c.Enrolled.Count);
-
-        // Placeholder data for pending grading (could be fetched from GradeService)
-        pendingGrading = assignedCoursesCount * 2; // dummy
-    }
-}

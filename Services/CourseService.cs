@@ -7,140 +7,92 @@ using EduConnect.Models;
 
 namespace EduConnect.Services
 {
+    /// <summary>
+    /// SRP: Manages course catalog and enrollment rules. DIP: Receives NotificationService through DI instead of constructing dependencies.
+    /// </summary>
     public class CourseService : ICourseService
     {
-        private List<Course> _courses = new(SeedData.Courses);
+        private readonly NotificationService _notifications;
+        private readonly List<Course> _courses = SeedData.Courses;
+        private readonly List<Student> _students = SeedData.Students;
 
-        public List<Course> GetAll()
-        {
-            return _courses;
-        }
+        public CourseService(NotificationService notifications) => _notifications = notifications;
 
-        public Course? GetById(Guid id)
-        {
-            return _courses.FirstOrDefault(c => c.Id == id);
-        }
+        public List<Course> GetAll() => _courses;
+        public Course? GetById(Guid id) => _courses.FirstOrDefault(c => c.Id == id);
 
         public void Add(Course entity)
         {
-            // Basic validation
-            if (string.IsNullOrWhiteSpace(entity.Code))
-                throw new ArgumentException("Course code is required.");
-            if (string.IsNullOrWhiteSpace(entity.Title))
-                throw new ArgumentException("Course title is required.");
-            if (entity.CreditHours <= 0)
-                throw new ArgumentException("Credit hours must be positive.");
-            if (entity.MaxCapacity <= 0)
-                throw new ArgumentException("Max capacity must be positive.");
-
-            // Check for duplicate code
-            if (_courses.Any(c => c.Code.Equals(entity.Code, StringComparison.OrdinalIgnoreCase)))
-                throw new ArgumentException("A course with this code already exists.");
-
+            Validate(entity);
+            if (_courses.Any(c => c.Code.Equals(entity.Code, StringComparison.OrdinalIgnoreCase))) throw new ArgumentException("A course with this code already exists.");
+            if (entity.Id == Guid.Empty) entity.Id = Guid.NewGuid();
             _courses.Add(entity);
+            SyncFacultyAssignment(entity);
         }
 
         public void Update(Course entity)
         {
-            var existing = GetById(entity.Id);
-            if (existing == null)
-                throw new ArgumentException("Course not found.");
-
-            // Basic validation
-            if (string.IsNullOrWhiteSpace(entity.Code))
-                throw new ArgumentException("Course code is required.");
-            if (string.IsNullOrWhiteSpace(entity.Title))
-                throw new ArgumentException("Course title is required.");
-            if (entity.CreditHours <= 0)
-                throw new ArgumentException("Credit hours must be positive.");
-            if (entity.MaxCapacity <= 0)
-                throw new ArgumentException("Max capacity must be positive.");
-
-            // Check for duplicate code (excluding the current course)
-            if (_courses.Any(c => c.Id != entity.Id && c.Code.Equals(entity.Code, StringComparison.OrdinalIgnoreCase)))
-                throw new ArgumentException("A course with this code already exists.");
-
-            // Cannot reduce capacity below current enrollment count
-            if (entity.MaxCapacity < existing.Enrolled.Count)
-                throw new ArgumentException($"Cannot reduce capacity below current enrollment count ({existing.Enrolled.Count}).");
-
-            // Update properties
+            Validate(entity);
+            var existing = GetById(entity.Id) ?? throw new ArgumentException("Course not found.");
+            if (_courses.Any(c => c.Id != entity.Id && c.Code.Equals(entity.Code, StringComparison.OrdinalIgnoreCase))) throw new ArgumentException("A course with this code already exists.");
+            if (entity.MaxCapacity < existing.Enrolled.Count) throw new ArgumentException($"Cannot reduce capacity below current enrollment count ({existing.Enrolled.Count}).");
+            foreach (var faculty in SeedData.Faculty) faculty.AssignedCourses.RemoveAll(c => c.Id == existing.Id);
             existing.Code = entity.Code;
             existing.Title = entity.Title;
             existing.CreditHours = entity.CreditHours;
             existing.MaxCapacity = entity.MaxCapacity;
             existing.AssignedFacultyId = entity.AssignedFacultyId;
             existing.IsActive = entity.IsActive;
+            SyncFacultyAssignment(existing);
         }
 
         public void Delete(Guid id)
         {
             var course = GetById(id);
-            if (course == null)
-                return;
-
-            // Cannot delete a course with enrolled students
-            if (course.Enrolled.Any())
-                throw new InvalidOperationException($"Course {course.Code} has enrolled students and cannot be deleted.");
-
+            if (course == null) return;
+            if (course.Enrolled.Any()) throw new InvalidOperationException($"Course {course.Code} has enrolled students and cannot be deleted.");
             _courses.Remove(course);
+            foreach (var faculty in SeedData.Faculty) faculty.AssignedCourses.RemoveAll(c => c.Id == id);
         }
 
         public void EnrollStudent(Guid courseId, Guid studentId)
         {
-            var course = GetById(courseId);
-            if (course == null)
-                throw new ArgumentException("Course not found.");
-
-            // Check if course is full
-            if (course.Enrolled.Count >= course.MaxCapacity)
-                throw new CourseFullException($"Course {course.Code} is full (capacity: {course.MaxCapacity}).");
-
-            // Get student from StudentService (we'll need to inject it, but for now use SeedData)
-            var student = SeedData.Students.FirstOrDefault(s => s.Id == studentId);
-            if (student == null)
-                throw new ArgumentException("Student not found.");
-
-            // Check if student is already enrolled
-            if (course.Enrolled.Any(s => s.Id == studentId))
-                throw new ArgumentException($"Student {student.FullName} is already enrolled in this course.");
-
-            // Enroll student
+            var course = GetById(courseId) ?? throw new ArgumentException("Course not found.");
+            if (!course.IsActive) throw new InvalidOperationException($"Course {course.Code} is inactive.");
+            if (course.EnrollmentStatus == EnrollmentStatus.Full) throw new CourseFullException($"Course {course.Code} is full.");
+            var student = _students.FirstOrDefault(s => s.Id == studentId) ?? throw new ArgumentException("Student not found.");
+            if (course.Enrolled.Any(s => s.Id == studentId) || student.Enrollments.Any(c => c.Id == courseId)) throw new InvalidOperationException($"{student.FullName} is already enrolled in {course.Code}.");
             course.Enrolled.Add(student);
             student.Enrollments.Add(course);
+            _notifications.AddNotification($"You enrolled in {course.Code} - {course.Title}.", NotificationType.Enrollment, student.Id);
         }
 
         public void DropCourse(Guid courseId, Guid studentId)
         {
-            var course = GetById(courseId);
-            if (course == null)
-                throw new ArgumentException("Course not found.");
-
-            var student = SeedData.Students.FirstOrDefault(s => s.Id == studentId);
-            if (student == null)
-                throw new ArgumentException("Student not found.");
-
-            // Remove student from course
+            var course = GetById(courseId) ?? throw new ArgumentException("Course not found.");
+            if (!course.IsActive) throw new InvalidOperationException($"Course {course.Code} is inactive and cannot be dropped.");
+            var student = _students.FirstOrDefault(s => s.Id == studentId) ?? throw new ArgumentException("Student not found.");
             var enrolledStudent = course.Enrolled.FirstOrDefault(s => s.Id == studentId);
-            if (enrolledStudent != null)
-            {
-                course.Enrolled.Remove(enrolledStudent);
-                student.Enrollments.Remove(course);
-            }
+            if (enrolledStudent == null) throw new InvalidOperationException($"{student.FullName} is not enrolled in {course.Code}.");
+            course.Enrolled.Remove(enrolledStudent);
+            student.Enrollments.RemoveAll(c => c.Id == courseId);
         }
 
-        public List<Course> GetForFaculty(Guid facultyId)
+        public List<Course> GetForFaculty(Guid facultyId) => _courses.Where(c => c.AssignedFacultyId == facultyId).ToList();
+        public List<Course> GetAvailable() => _courses.Where(c => c.IsActive && c.EnrollmentStatus != EnrollmentStatus.Full).ToList();
+
+        private static void Validate(Course entity)
         {
-            return _courses
-                .Where(c => c.AssignedFacultyId == facultyId)
-                .ToList();
+            if (string.IsNullOrWhiteSpace(entity.Code)) throw new ArgumentException("Course code is required.");
+            if (string.IsNullOrWhiteSpace(entity.Title)) throw new ArgumentException("Course title is required.");
+            if (entity.CreditHours <= 0) throw new ArgumentException("Credit hours must be positive.");
+            if (entity.MaxCapacity <= 0) throw new ArgumentException("Max capacity must be positive.");
         }
 
-        public List<Course> GetAvailable()
+        private static void SyncFacultyAssignment(Course course)
         {
-            return _courses
-                .Where(c => c.IsActive && c.EnrollmentStatus != EnrollmentStatus.Full)
-                .ToList();
+            var faculty = SeedData.Faculty.FirstOrDefault(f => f.Id == course.AssignedFacultyId);
+            if (faculty != null && !faculty.AssignedCourses.Any(c => c.Id == course.Id)) faculty.AssignedCourses.Add(course);
         }
     }
 }

@@ -1,47 +1,36 @@
 /* /Components/Layout/MainLayout.razor.rz.scp.css */
-/* MainLayout.razor.css - Updated for EduConnect custom layout */
+/* MainLayout scoped styles */
 
-.layout-container[b-ooi50mguef] {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-}
-
-.main-content[b-ooi50mguef] {
-    flex: 1;
-    padding-top: 1rem;
-}
-
-.footer[b-ooi50mguef] {
-    margin-top: auto;
-}
-
-/* Blazor error UI */
 #blazor-error-ui[b-ooi50mguef] {
-    background: lightyellow;
+    background: #fff;
+    border-top: 3px solid var(--ec-danger, #dc2626);
     bottom: 0;
-    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, .08);
+    color: #991b1b;
     display: none;
+    font-weight: 500;
     left: 0;
-    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    padding: .9rem 1.5rem;
     position: fixed;
+    right: 0;
     width: 100%;
-    z-index: 1000;
+    z-index: 2000;
 }
+
+    #blazor-error-ui .reload[b-ooi50mguef] {
+        margin-left: 1rem;
+        color: #4f46e5;
+        font-weight: 600;
+    }
 
     #blazor-error-ui .dismiss[b-ooi50mguef] {
         cursor: pointer;
         position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
+        right: 1rem;
+        top: 50%;
+        transform: translateY(-50%);
+        font-size: 1.1rem;
     }
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .main-content[b-ooi50mguef] {
-        padding: 1rem 0.5rem;
-    }
-}
 /* /Components/Layout/NavMenu.razor.rz.scp.css */
 .navbar-toggler[b-fw2j862ra6] {
     appearance: none;

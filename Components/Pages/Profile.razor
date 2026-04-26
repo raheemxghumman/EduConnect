@@ -1,307 +1,86 @@
 @page "/profile"
-@using EduConnect.Services
-@using EduConnect.Models
 @inject AuthStateService AuthState
-@inject IStudentService StudentService
-@inject NavigationManager Nav
+@using EduConnect.Models
 
 <AuthGuard>
-    <RoleLayout>
-        @if (currentUser == null)
-        {
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
+    @{
+        var user = AuthState.State.CurrentUser;
+        var initials = GetInitials(user?.FullName ?? "");
+    }
+
+    <div class="role-header">
+        <div class="d-flex align-items-center">
+            <div class="role-icon"><i class="bi bi-person-circle"></i></div>
+            <div class="ms-3">
+                <h2 class="mb-1">My Profile</h2>
+                <p class="mb-0 text-muted">Your account information</p>
             </div>
-        }
-        else
-        {
-            <div class="container py-5">
-                <div class="row">
-                    <div class="col-lg-4 mb-4">
-                        <div class="card shadow border-0 sticky-top" style="top: 20px;">
-                            <div class="card-header bg-primary text-white text-center py-4">
-                                <div class="mb-3">
-                                    <div class="avatar-circle mx-auto" style="width: 100px; height: 100px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                                        <i class="bi bi-person-fill text-white" style="font-size: 3rem;"></i>
-                                    </div>
-                                </div>
-                                <h4 class="mb-1">@currentUser.FullName</h4>
-                                <p class="mb-0 opacity-75">
-                                    <StatusBadge Status="@userRole" Text="@userRole" />
-                                </p>
-                            </div>
-                            <div class="card-body">
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex justify-content-between align-items-center">
-                                        <span><i class="bi bi-envelope me-2 text-muted"></i> Email</span>
-                                        <span class="fw-bold">@currentUser.Email</span>
-                                    </li>
-                                    @if (currentUser is Student student)
-                                    {
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-mortarboard me-2 text-muted"></i> Semester</span>
-                                            <span class="fw-bold">@student.Semester</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-graph-up me-2 text-muted"></i> CGPA</span>
-                                            <span class="fw-bold @GetCGPAColor(student.CGPA)">@student.CGPA.ToString("F2")</span>
-                                        </li>
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-journal-text me-2 text-muted"></i> Enrolled Courses</span>
-                                            <span class="badge bg-primary rounded-pill">@student.Enrollments.Count</span>
-                                        </li>
-                                    }
-                                    else if (currentUser is Faculty faculty)
-                                    {
-                                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                                            <span><i class="bi bi-briefcase me-2 text-muted"></i> Assigned Courses</span>
-                                            <span class="badge bg-primary rounded-pill">@faculty.AssignedCourses.Count</span>
-                                        </li>
-                                    }
-                                </ul>
-                            </div>
-                            <div class="card-footer text-center">
-                                <a href="/logout" class="btn btn-outline-danger btn-sm">
-                                    <i class="bi bi-box-arrow-left me-1"></i> Sign Out
-                                </a>
-                            </div>
-                        </div>
-                    </div>
+        </div>
+    </div>
 
-                    <div class="col-lg-8">
-                        <div class="card shadow border-0 mb-4">
-                            <div class="card-header bg-light py-3">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-pencil-square me-2"></i>
-                                    Edit Profile
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <EditForm Model="@editModel" OnValidSubmit="@HandleSaveProfile" FormName="profileForm">
-                                    <DataAnnotationsValidator />
-                                    <div class="mb-3">
-                                        <label class="form-label">Full Name</label>
-                                        <InputText @bind-Value="editModel.FullName" class="form-control" />
-                                        <ValidationMessage For="@(() => editModel.FullName)" class="text-danger small" />
-                                    </div>
-
-                                    <div class="mb-3">
-                                        <label class="form-label">Email Address</label>
-                                        <InputText @bind-Value="editModel.Email" class="form-control" readonly />
-                                        <div class="form-text">Email cannot be changed</div>
-                                    </div>
-
-                                    @if (currentUser is Student)
-                                    {
-                                        <div class="row">
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">Semester</label>
-                                                <InputNumber @bind-Value="editModel.Semester" class="form-control" min="1" max="8" />
-                                                <ValidationMessage For="@(() => editModel.Semester)" class="text-danger small" />
-                                            </div>
-                                            <div class="col-md-6 mb-3">
-                                                <label class="form-label">CGPA</label>
-                                                <InputNumber @bind-Value="editModel.CGPA" class="form-control" step="0.01" min="0" max="4" />
-                                                <ValidationMessage For="@(() => editModel.CGPA)" class="text-danger small" />
-                                            </div>
-                                        </div>
-                                    }
-
-                                    <div class="mb-4">
-                                        <label class="form-label">Change Password (leave blank to keep current)</label>
-                                        <InputText type="password" @bind-Value="editModel.NewPassword" class="form-control" placeholder="New password" />
-                                        <ValidationMessage For="@(() => editModel.NewPassword)" class="text-danger small" />
-                                        <div class="form-text">Password must be at least 6 characters</div>
-                                    </div>
-
-                                    <div class="d-flex justify-content-between">
-                                        <button type="button" class="btn btn-outline-secondary" @onclick="@CancelEdit">
-                                            Cancel
-                                        </button>
-                                        <button type="submit" class="btn btn-primary" disabled="@isSaving">
-                                            @if (isSaving)
-                                            {
-                                                <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                                                <span>Saving...</span>
-                                            }
-                                            else
-                                            {
-                                                <i class="bi bi-check-circle me-2"></i>
-                                                <span>Save Changes</span>
-                                            }
-                                        </button>
-                                    </div>
-                                </EditForm>
-
-                                @if (!string.IsNullOrEmpty(saveMessage))
-                                {
-                                    <div class="alert @(saveIsError ? "alert-danger" : "alert-success") mt-3">
-                                        <i class="@(saveIsError ? "bi-exclamation-triangle" : "bi-check-circle") me-2"></i>
-                                        @saveMessage
-                                    </div>
-                                }
-                            </div>
-                        </div>
-
-                        <!-- Recent Activity (placeholder) -->
-                        <div class="card shadow border-0">
-                            <div class="card-header bg-light py-3">
-                                <h5 class="mb-0">
-                                    <i class="bi bi-clock-history me-2"></i>
-                                    Recent Activity
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <ul class="list-group list-group-flush">
-                                    <li class="list-group-item d-flex">
-                                        <i class="bi bi-check-circle text-success me-3 mt-1"></i>
-                                        <div>
-                                            <h6 class="mb-1">Logged in successfully</h6>
-                                            <p class="text-muted small mb-0">Just now</p>
-                                        </div>
-                                    </li>
-                                    <li class="list-group-item d-flex">
-                                        <i class="bi bi-book text-primary me-3 mt-1"></i>
-                                        <div>
-                                            <h6 class="mb-1">Enrolled in "Data Structures"</h6>
-                                            <p class="text-muted small mb-0">2 days ago</p>
-                                        </div>
-                                    </li>
-                                    <li class="list-group-item d-flex">
-                                        <i class="bi bi-file-earmark-text text-info me-3 mt-1"></i>
-                                        <div>
-                                            <h6 class="mb-1">Grade submitted for "Algorithms"</h6>
-                                            <p class="text-muted small mb-0">1 week ago</p>
-                                        </div>
-                                    </li>
-                                </ul>
-                            </div>
-                        </div>
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-4 flex-wrap gap-3">
+                <div class="avatar-circle d-flex align-items-center justify-content-center rounded-circle text-white"
+                     style="width:80px;height:80px;font-size:1.75rem;">
+                    @initials
+                </div>
+                <div>
+                    <h3 class="mb-1">@user?.FullName</h3>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="text-muted"><i class="bi bi-envelope"></i> @user?.Email</span>
+                        <span class="role-pill">@AuthState.State.Role</span>
                     </div>
                 </div>
             </div>
-        }
-    </RoleLayout>
+
+            <hr />
+
+            <div class="row g-3">
+                @if (user is global::EduConnect.Models.Student s)
+                {
+                    <div class="col-md-4">
+                        <div class="text-muted small text-uppercase fw-bold">Semester</div>
+                        <div class="fs-5 fw-bold">@s.Semester</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small text-uppercase fw-bold">CGPA</div>
+                        <div class="fs-5 fw-bold text-success">@s.CGPA.ToString("0.00")</div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-muted small text-uppercase fw-bold">Enrolled courses</div>
+                        <div class="fs-5 fw-bold">@s.Enrollments.Count</div>
+                    </div>
+                }
+                else if (user is global::EduConnect.Models.Faculty f)
+                {
+                    <div class="col-md-6">
+                        <div class="text-muted small text-uppercase fw-bold">Assigned courses</div>
+                        <div class="fs-5 fw-bold">@f.AssignedCourses.Count</div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="text-muted small text-uppercase fw-bold">Role</div>
+                        <div class="fs-5 fw-bold">Faculty member</div>
+                    </div>
+                }
+                else if (user is global::EduConnect.Models.Admin)
+                {
+                    <div class="col-12">
+                        <div class="text-muted small text-uppercase fw-bold">Privileges</div>
+                        <div class="fs-6">Full system administration access — student, course, grade and broadcast management.</div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
 </AuthGuard>
 
 @code {
-    private Person? currentUser;
-    private string userRole = "Unknown";
-    private bool isSaving = false;
-    private string? saveMessage;
-    private bool saveIsError = false;
-
-    private class EditProfileModel
+    string GetInitials(string name)
     {
-        [Required]
-        [StringLength(100)]
-        public string FullName { get; set; } = string.Empty;
-
-        [Required]
-        [EmailAddress]
-        public string Email { get; set; } = string.Empty;
-
-        [Range(1, 8)]
-        public int Semester { get; set; } = 1;
-
-        [Range(0.0, 4.0)]
-        public decimal CGPA { get; set; } = 0.0m;
-
-        [MinLength(6, ErrorMessage = "Password must be at least 6 characters")]
-        public string? NewPassword { get; set; }
-    }
-
-    private EditProfileModel editModel = new();
-
-    protected override void OnInitialized()
-    {
-        currentUser = AuthState.State.CurrentUser;
-        if (currentUser != null)
-        {
-            userRole = currentUser switch
-            {
-                Admin => "Administrator",
-                Faculty => "Faculty",
-                Student => "Student",
-                _ => "User"
-            };
-
-            editModel.FullName = currentUser.FullName;
-            editModel.Email = currentUser.Email;
-            if (currentUser is Student student)
-            {
-                editModel.Semester = student.Semester;
-                editModel.CGPA = student.CGPA;
-            }
-        }
-    }
-
-    private string GetCGPAColor(decimal cgpa)
-    {
-        return cgpa >= 3.5m ? "text-success" : cgpa >= 2.5m ? "text-warning" : "text-danger";
-    }
-
-    private async Task HandleSaveProfile()
-    {
-        isSaving = true;
-        saveMessage = null;
-        saveIsError = false;
-        StateHasChanged();
-
-        try
-        {
-            await Task.Delay(800); // Simulate API call
-
-            if (currentUser == null) return;
-
-            // Update basic properties
-            currentUser.FullName = editModel.FullName;
-
-            // Update password if provided
-            if (!string.IsNullOrWhiteSpace(editModel.NewPassword))
-            {
-                currentUser.PasswordHash = editModel.NewPassword; // In real app, hash it
-            }
-
-            // Save changes based on user type
-            if (currentUser is Student student)
-            {
-                student.Semester = editModel.Semester;
-                student.CGPA = editModel.CGPA;
-                StudentService.Update(student);
-            }
-            // Note: FacultyService and AdminService not yet implemented
-
-            saveMessage = "Profile updated successfully!";
-            saveIsError = false;
-        }
-        catch (Exception ex)
-        {
-            saveMessage = $"Error saving profile: {ex.Message}";
-            saveIsError = true;
-        }
-        finally
-        {
-            isSaving = false;
-            StateHasChanged();
-        }
-    }
-
-    private void CancelEdit()
-    {
-        // Reset form to original values
-        if (currentUser != null)
-        {
-            editModel.FullName = currentUser.FullName;
-            editModel.Email = currentUser.Email;
-            if (currentUser is Student student)
-            {
-                editModel.Semester = student.Semester;
-                editModel.CGPA = student.CGPA;
-            }
-        }
-        saveMessage = null;
+        if (string.IsNullOrWhiteSpace(name)) return "?";
+        var parts = name.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+        if (parts.Length >= 2) return $"{parts[0][0]}{parts[^1][0]}".ToUpper();
+        return parts[0].Length >= 2 ? parts[0].Substring(0, 2).ToUpper() : parts[0].ToUpper();
     }
 }
