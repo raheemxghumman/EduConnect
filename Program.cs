@@ -1,10 +1,19 @@
 using EduConnect.Components;
+using EduConnect.Interfaces;
+using EduConnect.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+// Custom services
+builder.Services.AddScoped<AuthStateService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<ICourseService, CourseService>();
+builder.Services.AddScoped<IGradeService, GradeService>();
 
 var app = builder.Build();
 
